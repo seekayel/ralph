@@ -1,50 +1,90 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version change: 1.0.0 → 1.1.0
+- Modified principles: 
+  * Principle 1: Isolation and Sandboxing → Complete Sandboxing and Isolation (expanded for coding agent)
+  * Principle 2: Clean Fork Management → Contained Failure Management (refocused on failure containment)
+  * Principle 3: Operational Simplicity → User-Friendly Operation (enhanced for ease of use)
+- Added sections: Coding agent specific requirements, failure tolerance guidelines
+- Removed sections: Fork-specific management details (generalized for coding tasks)
+- Templates requiring updates: 
+  ⚠ .specify/templates/plan-template.md (needs review for coding agent context)
+  ⚠ .specify/templates/spec-template.md (needs review for coding requirements)
+  ⚠ .specify/templates/tasks-template.md (needs review for coding task categories)
+  ⚠ .specify/templates/commands/*.md (needs review for agent-specific guidance)
+- Follow-up TODOs: Review and update dependent templates to align with coding agent purpose
+-->
+
+# ralph Project Constitution
+
+## Document Information
+
+- **Constitution Version**: 1.1.0
+- **Ratification Date**: 2025-09-27
+- **Last Amended**: 2025-09-27
+
+## Project Overview
+
+ralph is a coding agent that is fully sandboxed, designed to assist with software development tasks while maintaining complete isolation from system resources. The agent operates within secure boundaries where failures are expected and safely contained to the working directory.
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### Principle 1: Complete Sandboxing and Isolation
+All coding operations MUST be executed within fully sandboxed environments with no access to system-level resources. The agent MUST operate exclusively within designated working directories and MUST NOT interact with host system files, processes, or network resources outside the sandbox.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+**Rationale**: As a coding agent handling potentially untrusted code and operations, complete sandboxing ensures system security and prevents any possibility of host contamination or privilege escalation.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### Principle 2: Contained Failure Management
+Failures are expected as part of normal operation and MUST be safely contained within the working directory. The agent MUST gracefully handle errors, exceptions, and unexpected states without compromising sandbox integrity or affecting system stability.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale**: Coding tasks inherently involve trial and error. By expecting and properly containing failures, the agent maintains system stability while providing a safe environment for experimentation and development.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### Principle 3: User-Friendly Operation
+The agent MUST be easy to use with minimal setup requirements and intuitive interaction patterns. Complexity MUST be hidden from users while maintaining powerful coding assistance capabilities within the sandbox boundaries.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
-
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
-
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Rationale**: Ease of use ensures broad adoption and reduces barriers to entry while keeping the agent focused on its core mission of safe, sandboxed coding assistance.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### Amendment Procedure
+Constitutional amendments require:
+1. Documented proposal with rationale in project issues
+2. Community discussion period of minimum 7 days
+3. Maintainer consensus for approval
+4. Version bump following semantic versioning
+5. Update of all dependent templates and documentation
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+### Versioning Policy
+- **MAJOR**: Backward incompatible governance/principle removals or redefinitions
+- **MINOR**: New principle/section added or materially expanded guidance
+- **PATCH**: Clarifications, wording, typo fixes, non-semantic refinements
+
+### Compliance Review
+Constitution compliance MUST be reviewed:
+- Before each major release
+- When adding new core functionality
+- During security audits
+- Annually at minimum
+
+## Implementation Guidelines
+
+### Development Standards
+- All code MUST pass automated security scanning
+- Sandbox boundaries MUST be enforced at the container/system level
+- Error handling MUST prevent information leakage beyond working directory
+- Dependencies MUST be regularly audited for vulnerabilities
+- Agent capabilities MUST be restricted to coding-related tasks
+
+### Quality Assurance
+- Unit tests MUST cover sandbox isolation mechanisms
+- Integration tests MUST verify failure containment procedures
+- Security tests MUST validate complete system isolation
+- Performance tests MUST ensure resource constraints are respected
+- User experience tests MUST verify ease of use requirements
+
+### Documentation Requirements
+- Sandbox limitations MUST be clearly documented
+- Failure handling procedures MUST be detailed
+- User interaction patterns MUST be documented with examples
+- Security model MUST be explicitly stated
+- Troubleshooting guides MUST be maintained and current
