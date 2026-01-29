@@ -27,6 +27,16 @@ bun install
 bun run build
 ```
 
+## Making the `ralph` command available
+
+After building, link the package globally to make the `ralph` command available from any directory:
+
+```bash
+bun link
+```
+
+This registers the `ralph` CLI globally. You only need to run this once after the initial build.
+
 ## Test
 
 ```bash
