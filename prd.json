@@ -162,6 +162,27 @@
       "description": "Add unit tests for the logger utility including setVerbose, isVerbose, debug, debugObject, and info functions.",
       "status": "done",
       "priority": "normal"
+    },
+    {
+      "id": 24,
+      "title": "Improve input validation for issue payload",
+      "description": "Add validation for whitespace-only strings in id/title fields, issue ID format validation (alphanumeric and hyphens only), and protection against path traversal in issue IDs.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 25,
+      "title": "Add timeout mechanism for shell commands in spawn step",
+      "description": "The spawn step's runShellCommand() function has no timeout. If an install/build/test command hangs, the workflow stalls indefinitely. Add configurable timeout with reasonable default.",
+      "status": "todo",
+      "priority": "high"
+    },
+    {
+      "id": 26,
+      "title": "Add detailed help text for all CLI commands",
+      "description": "The spec requires 'Each CLI action should have an associated --help flag, which prints all relevant command flags and arguments that are possible.' Add comprehensive help text for each command.",
+      "status": "todo",
+      "priority": "normal"
     }
   ]
 }

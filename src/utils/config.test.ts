@@ -11,8 +11,119 @@ import {
   parseIssuePayload,
   readPayloadFromStdinOrFile,
   substituteVariables,
+  validateIssueId,
+  validateIssueTitle,
   validateSkillPaths,
 } from "./config.js";
+
+describe("validateIssueId", () => {
+  it("accepts valid alphanumeric ID", () => {
+    expect(() => validateIssueId("HLN-123")).not.toThrow();
+  });
+
+  it("accepts ID with underscores", () => {
+    expect(() => validateIssueId("ISSUE_123")).not.toThrow();
+  });
+
+  it("accepts ID with hyphens", () => {
+    expect(() => validateIssueId("issue-abc-456")).not.toThrow();
+  });
+
+  it("throws on empty string", () => {
+    expect(() => validateIssueId("")).toThrow("empty or whitespace-only");
+  });
+
+  it("throws on whitespace-only string", () => {
+    expect(() => validateIssueId("   ")).toThrow("empty or whitespace-only");
+  });
+
+  it("throws on path traversal with ..", () => {
+    expect(() => validateIssueId("../../../etc")).toThrow("invalid path characters");
+  });
+
+  it("throws on forward slash", () => {
+    expect(() => validateIssueId("foo/bar")).toThrow("invalid path characters");
+  });
+
+  it("throws on backslash", () => {
+    expect(() => validateIssueId("foo\\bar")).toThrow("invalid path characters");
+  });
+
+  it("throws on special characters", () => {
+    expect(() => validateIssueId("issue@123")).toThrow(
+      "alphanumeric characters, hyphens, and underscores"
+    );
+  });
+
+  it("throws on spaces", () => {
+    expect(() => validateIssueId("issue 123")).toThrow(
+      "alphanumeric characters, hyphens, and underscores"
+    );
+  });
+
+  it("throws on reserved name HEAD", () => {
+    expect(() => validateIssueId("HEAD")).toThrow("reserved name");
+  });
+
+  it("throws on reserved name main (case insensitive)", () => {
+    expect(() => validateIssueId("Main")).toThrow("reserved name");
+  });
+
+  it("throws on reserved name master", () => {
+    expect(() => validateIssueId("master")).toThrow("reserved name");
+  });
+
+  it("throws on .git (contains dot which is invalid)", () => {
+    // .git is caught by the special characters check before reserved names check
+    expect(() => validateIssueId(".git")).toThrow(
+      "alphanumeric characters, hyphens, and underscores"
+    );
+  });
+
+  it("throws on reserved name git", () => {
+    expect(() => validateIssueId("git")).toThrow("reserved name");
+  });
+
+  it("throws on excessively long ID", () => {
+    const longId = "a".repeat(101);
+    expect(() => validateIssueId(longId)).toThrow("too long");
+  });
+
+  it("accepts ID at max length (100 chars)", () => {
+    const maxId = "a".repeat(100);
+    expect(() => validateIssueId(maxId)).not.toThrow();
+  });
+});
+
+describe("validateIssueTitle", () => {
+  it("accepts valid title", () => {
+    expect(() => validateIssueTitle("Fix login bug")).not.toThrow();
+  });
+
+  it("throws on empty string", () => {
+    expect(() => validateIssueTitle("")).toThrow("empty or whitespace-only");
+  });
+
+  it("throws on whitespace-only string", () => {
+    expect(() => validateIssueTitle("   \t\n  ")).toThrow("empty or whitespace-only");
+  });
+
+  it("throws on excessively long title", () => {
+    const longTitle = "a".repeat(501);
+    expect(() => validateIssueTitle(longTitle)).toThrow("too long");
+  });
+
+  it("accepts title at max length (500 chars)", () => {
+    const maxTitle = "a".repeat(500);
+    expect(() => validateIssueTitle(maxTitle)).not.toThrow();
+  });
+
+  it("accepts title with special characters", () => {
+    expect(() =>
+      validateIssueTitle("Fix bug: login fails with @special chars!")
+    ).not.toThrow();
+  });
+});
 
 describe("parseIssuePayload", () => {
   it("parses valid JSON payload", () => {
@@ -27,6 +138,17 @@ describe("parseIssuePayload", () => {
     expect(issue.id).toBe("HLN-123");
     expect(issue.title).toBe("Fix login bug");
     expect(issue.description).toBe("Users cannot log in with valid credentials");
+  });
+
+  it("trims whitespace from ID", () => {
+    const payload = JSON.stringify({
+      id: "  HLN-123  ",
+      title: "Fix login bug",
+      description: "Description",
+    });
+
+    const issue = parseIssuePayload(payload);
+    expect(issue.id).toBe("HLN-123");
   });
 
   it("throws on invalid JSON", () => {
@@ -75,6 +197,48 @@ describe("parseIssuePayload", () => {
 
     const issue = parseIssuePayload(payload);
     expect(issue.description).toBe("");
+  });
+
+  it("throws on whitespace-only ID", () => {
+    const payload = JSON.stringify({
+      id: "   ",
+      title: "Fix bug",
+      description: "Description",
+    });
+
+    expect(() => parseIssuePayload(payload)).toThrow("empty or whitespace-only");
+  });
+
+  it("throws on whitespace-only title", () => {
+    const payload = JSON.stringify({
+      id: "HLN-123",
+      title: "   ",
+      description: "Description",
+    });
+
+    expect(() => parseIssuePayload(payload)).toThrow("empty or whitespace-only");
+  });
+
+  it("throws on ID with path traversal", () => {
+    const payload = JSON.stringify({
+      id: "../../../etc/passwd",
+      title: "Fix bug",
+      description: "Description",
+    });
+
+    expect(() => parseIssuePayload(payload)).toThrow("invalid path characters");
+  });
+
+  it("throws on ID with special characters", () => {
+    const payload = JSON.stringify({
+      id: "issue@123!",
+      title: "Fix bug",
+      description: "Description",
+    });
+
+    expect(() => parseIssuePayload(payload)).toThrow(
+      "alphanumeric characters, hyphens, and underscores"
+    );
   });
 });
 

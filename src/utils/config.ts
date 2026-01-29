@@ -127,6 +127,56 @@ export function substituteVariables(template: string, issue: Issue): string {
     .replace(/\$\{issue\.description\}/g, issue.description);
 }
 
+/**
+ * Validates that an issue ID is safe and well-formed.
+ * Allows alphanumeric characters, hyphens, and underscores.
+ * Protects against path traversal and reserved names.
+ */
+export function validateIssueId(id: string): void {
+  const trimmedId = id.trim();
+
+  if (!trimmedId) {
+    throw new Error("Issue ID cannot be empty or whitespace-only");
+  }
+
+  // Check for path traversal attempts
+  if (trimmedId.includes("..") || trimmedId.includes("/") || trimmedId.includes("\\")) {
+    throw new Error("Issue ID contains invalid path characters");
+  }
+
+  // Only allow alphanumeric, hyphens, and underscores
+  if (!/^[a-zA-Z0-9_-]+$/.test(trimmedId)) {
+    throw new Error(
+      "Issue ID must contain only alphanumeric characters, hyphens, and underscores"
+    );
+  }
+
+  // Check for reserved git names (case-insensitive)
+  const reserved = ["head", "master", "main", ".git", "git"];
+  if (reserved.includes(trimmedId.toLowerCase())) {
+    throw new Error(`Issue ID cannot be a reserved name: ${trimmedId}`);
+  }
+
+  // Reasonable length limit (git branch names have limits)
+  if (trimmedId.length > 100) {
+    throw new Error("Issue ID is too long (maximum 100 characters)");
+  }
+}
+
+/**
+ * Validates that a title is not empty or whitespace-only.
+ */
+export function validateIssueTitle(title: string): void {
+  if (!title.trim()) {
+    throw new Error("Issue title cannot be empty or whitespace-only");
+  }
+
+  // Reasonable length limit
+  if (title.length > 500) {
+    throw new Error("Issue title is too long (maximum 500 characters)");
+  }
+}
+
 export function parseIssuePayload(input: string): Issue {
   try {
     const parsed = JSON.parse(input);
@@ -141,8 +191,14 @@ export function parseIssuePayload(input: string): Issue {
       throw new Error("Issue payload must have a string 'description' field");
     }
 
+    // Validate issue ID format and safety
+    validateIssueId(parsed.id);
+
+    // Validate title is not empty/whitespace
+    validateIssueTitle(parsed.title);
+
     return {
-      id: parsed.id,
+      id: parsed.id.trim(),
       title: parsed.title,
       description: parsed.description,
     };
