@@ -153,7 +153,7 @@
       "id": 22,
       "title": "Fix README Codex documentation link",
       "description": "Update README.md to point to correct Codex CLI documentation instead of the deprecated github.com/openai/codex link.",
-      "status": "todo",
+      "status": "done",
       "priority": "low"
     },
     {

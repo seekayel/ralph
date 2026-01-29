@@ -13,7 +13,7 @@ Before using Ralph, ensure you have the following installed:
 - **claude** - Claude Code CLI for AI-assisted coding
   - Install: https://docs.anthropic.com/claude-code
 - **codex** - Codex CLI for validation and review
-  - Install: https://github.com/openai/codex
+  - Install: https://developers.openai.com/codex/cli/
 
 ## Installation
 
