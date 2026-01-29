@@ -1,6 +1,7 @@
 import type { StepResult, WorkflowContext } from "../types.js";
 import { loadStepConfig } from "../utils/config.js";
 import { runAgentCommand } from "../utils/process.js";
+import { loadSessionId, saveSessionId } from "../utils/session.js";
 
 const CONFIG_PATH = "config/implement.md";
 
@@ -14,31 +15,43 @@ export async function implement(
   try {
     let config = await loadStepConfig(configPath, context.issue);
 
-    if (reviewFeedback && context.sessionId) {
+    // Load session ID from file if not in context (for standalone CLI invocations)
+    let sessionId = context.sessionId;
+    if (!sessionId) {
+      sessionId = await loadSessionId(context.worktreeDir);
+    }
+
+    if (reviewFeedback && sessionId) {
       config = {
         ...config,
         prompt: `${config.prompt}\n\n## Code Review Feedback to Address\n\n${reviewFeedback}`,
-        args: [...config.args, "--resume", context.sessionId],
+        args: [...config.args, "--resume", sessionId],
       };
     }
 
     console.log("Starting implementation...");
     const result = await runAgentCommand(config, context.worktreeDir);
 
-    const sessionId = extractSessionId(result.stdout);
+    const extractedSessionId = extractSessionId(result.stdout);
+    const finalSessionId = extractedSessionId || sessionId;
+
+    // Persist session ID to file for future invocations
+    if (finalSessionId) {
+      await saveSessionId(context.worktreeDir, finalSessionId);
+    }
 
     if (result.success) {
       return {
         success: true,
         message: "Implementation completed successfully",
-        sessionId: sessionId || context.sessionId,
+        sessionId: finalSessionId,
       };
     }
 
     return {
       success: false,
       message: `Implementation failed: ${result.stderr}`,
-      sessionId: sessionId || context.sessionId,
+      sessionId: finalSessionId,
     };
   } catch (error) {
     return {

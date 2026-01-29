@@ -179,6 +179,7 @@ program
   .command("implement")
   .description("Run the implementation phase using Claude Code")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
+  .option("-f, --feedback <file>", "Code review feedback file to address (resumes previous session)")
   .action(async (options) => {
     const rootDir = await validateEnvironment();
     const configDir = getConfigDir(rootDir);
@@ -186,7 +187,13 @@ program
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
       const context = createContextFromIssue(issue, rootDir);
-      const result = await implement(context, configDir);
+
+      let reviewFeedback: string | undefined;
+      if (options.feedback) {
+        reviewFeedback = await Bun.file(options.feedback).text();
+      }
+
+      const result = await implement(context, configDir, reviewFeedback);
 
       if (!result.success) {
         console.error(result.message);
@@ -194,6 +201,9 @@ program
       }
 
       console.log(result.message);
+      if (result.sessionId) {
+        console.log(`Session ID saved for future resume: ${result.sessionId}`);
+      }
     } catch (error) {
       console.error(`Error: ${error}`);
       process.exit(1);

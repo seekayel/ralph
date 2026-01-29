@@ -127,6 +127,34 @@
       "description": "Add E2E test that simulates the full workflow with mocked external CLI tools (claude, codex, gh).",
       "status": "done",
       "priority": "low"
+    },
+    {
+      "id": 19,
+      "title": "Session ID persistence for implement step",
+      "description": "Implement file-based persistence for session IDs to enable resuming claude sessions between separate CLI invocations. Store session ID in .ralph/session file within worktree directory. Load session ID when running implement step after review feedback.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 20,
+      "title": "Add verbose/debug logging mode",
+      "description": "Add --verbose or --debug flag to CLI commands to enable detailed logging of workflow steps, config loading, and external command invocations for troubleshooting.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": 21,
+      "title": "Validate skill file paths exist before agent invocation",
+      "description": "Config files reference _agents/skills/ paths. Add validation that these skill files exist before invoking agents to provide better error messages.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": 22,
+      "title": "Fix README Codex documentation link",
+      "description": "Update README.md to point to correct Codex CLI documentation instead of the deprecated github.com/openai/codex link.",
+      "status": "todo",
+      "priority": "low"
     }
   ]
 }
