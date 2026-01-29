@@ -13,8 +13,6 @@ export async function runAgentCommand(
   config: StepConfig,
   cwd: string
 ): Promise<ProcessResult> {
-  const args = [...config.args, config.prompt];
-
   debug(`Executing agent command: ${config.command}`);
   debug(`Working directory: ${cwd}`);
   debugObject("Command arguments", config.args);
@@ -22,12 +20,17 @@ export async function runAgentCommand(
     debug(`Prompt length: ${config.prompt.length} characters`);
   }
 
-  const proc = spawn([config.command, ...args], {
+  // Pass prompt via stdin to avoid issues with special characters and long prompts
+  const proc = spawn([config.command, ...config.args], {
     cwd,
-    stdin: "inherit",
+    stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
   });
+
+  // Write prompt to stdin and close it (Bun's FileSink API)
+  proc.stdin.write(config.prompt);
+  proc.stdin.end();
 
   const stdout = await new Response(proc.stdout).text();
   const stderr = await new Response(proc.stderr).text();

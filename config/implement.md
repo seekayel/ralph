@@ -3,7 +3,6 @@ command: claude
 args:
   - "--print"
   - "--dangerously-skip-permissions"
-  - "-p"
 ---
 
 Use the research-plan-implement workflow defined in `.ralph/_agents/skills/research-plan-implement/skill.md` to implement the plan.

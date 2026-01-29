@@ -1,9 +1,15 @@
-import { Glob } from "bun";
+import { Glob, $ } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
 import { issueToTopicName, loadStepConfig } from "../utils/config.js";
 import { debug } from "../utils/logger.js";
 import { syncAgentsToWorktree } from "../utils/paths.js";
 import { runAgentCommand } from "../utils/process.js";
+
+async function ensureThoughtsDir(worktreeDir: string, subdir: string): Promise<void> {
+  const dir = `${worktreeDir}/_thoughts/${subdir}`;
+  await $`mkdir -p ${dir}`.quiet();
+  debug(`Ensured directory exists: ${dir}`);
+}
 
 const CONFIG_PATH = "config/review.md";
 
@@ -20,6 +26,9 @@ export async function review(
 
   debug(`Review step starting for issue: ${context.issue.id}`);
   debug(`Expected feedback file: ${expectedFile}`);
+
+  // Ensure the output directory exists
+  await ensureThoughtsDir(context.worktreeDir, "code-review");
 
   try {
     // Sync agents to worktree before invoking Codex
@@ -60,11 +69,11 @@ export async function review(
       };
     }
 
-    debug(`Review failed: ${result.stderr}`);
+    debug(`Review failed: ${result.stderr || result.stdout}`);
     return {
       success: false,
       needsChanges: false,
-      message: `Review failed: ${result.stderr}`,
+      message: `Review failed: ${result.stderr || result.stdout}`,
     };
   } catch (error) {
     debug(`Review step error: ${error}`);

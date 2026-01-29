@@ -43,11 +43,11 @@ export async function validate(
       };
     }
 
-    debug(`Validation failed: ${result.stderr}`);
+    debug(`Validation failed: ${result.stderr || result.stdout}`);
     return {
       success: false,
       needsChanges: false,
-      message: `Validation failed: ${result.stderr}`,
+      message: `Validation failed: ${result.stderr || result.stdout}`,
     };
   } catch (error) {
     debug(`Validate step error: ${error}`);

@@ -1,4 +1,4 @@
-import { Glob } from "bun";
+import { Glob, $ } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
 import { issueToTopicName, loadStepConfig } from "../utils/config.js";
 import { debug } from "../utils/logger.js";
@@ -8,6 +8,12 @@ import { runAgentCommand } from "../utils/process.js";
 const CONFIG_PATH = "config/plan.md";
 const MAX_RETRIES = 1;
 
+async function ensureThoughtsDir(worktreeDir: string, subdir: string): Promise<void> {
+  const dir = `${worktreeDir}/_thoughts/${subdir}`;
+  await $`mkdir -p ${dir}`.quiet();
+  debug(`Ensured directory exists: ${dir}`);
+}
+
 export async function plan(
   context: WorkflowContext
 ): Promise<StepResult> {
@@ -16,6 +22,9 @@ export async function plan(
 
   debug(`Plan step starting for issue: ${context.issue.id}`);
   debug(`Expected output file: ${expectedFile}`);
+
+  // Ensure the output directory exists
+  await ensureThoughtsDir(context.worktreeDir, "plan");
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     if (attempt > 0) {
@@ -68,7 +77,7 @@ async function runPlanStep(
       success: result.success,
       message: result.success
         ? "Plan agent completed"
-        : `Plan agent failed: ${result.stderr}`,
+        : `Plan agent failed: ${result.stderr || result.stdout}`,
     };
   } catch (error) {
     return {

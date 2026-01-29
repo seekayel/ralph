@@ -32,10 +32,10 @@ export async function publish(
     const result = await runAgentCommand(config, context.worktreeDir);
 
     if (!result.success) {
-      debug(`Publish verification failed: ${result.stderr}`);
+      debug(`Publish verification failed: ${result.stderr || result.stdout}`);
       return {
         success: false,
-        message: `Publish verification failed: ${result.stderr}`,
+        message: `Publish verification failed: ${result.stderr || result.stdout}`,
       };
     }
 

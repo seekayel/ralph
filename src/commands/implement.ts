@@ -1,3 +1,4 @@
+import { $ } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
 import { loadStepConfig } from "../utils/config.js";
 import { debug } from "../utils/logger.js";
@@ -7,12 +8,21 @@ import { loadSessionId, saveSessionId } from "../utils/session.js";
 
 const CONFIG_PATH = "config/implement.md";
 
+async function ensureThoughtsDir(worktreeDir: string, subdir: string): Promise<void> {
+  const dir = `${worktreeDir}/_thoughts/${subdir}`;
+  await $`mkdir -p ${dir}`.quiet();
+  debug(`Ensured directory exists: ${dir}`);
+}
+
 export async function implement(
   context: WorkflowContext,
   reviewFeedback?: string
 ): Promise<StepResult> {
   debug(`Implement step starting for issue: ${context.issue.id}`);
   debug(`Review feedback provided: ${!!reviewFeedback}`);
+
+  // Ensure the output directory exists
+  await ensureThoughtsDir(context.worktreeDir, "implement");
 
   try {
     // Sync agents to worktree before invoking Claude
@@ -60,10 +70,10 @@ export async function implement(
       };
     }
 
-    debug(`Implementation failed: ${result.stderr}`);
+    debug(`Implementation failed: ${result.stderr || result.stdout}`);
     return {
       success: false,
-      message: `Implementation failed: ${result.stderr}`,
+      message: `Implementation failed: ${result.stderr || result.stdout}`,
       sessionId: finalSessionId,
     };
   } catch (error) {
