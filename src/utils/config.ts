@@ -7,9 +7,61 @@ interface ConfigFrontMatter {
   args?: string[];
 }
 
+/**
+ * Extracts skill file paths from config prompt text.
+ * Looks for patterns like _agents/skills/foo/skill.md
+ */
+export function extractSkillPaths(text: string): string[] {
+  // Match _agents/skills/* paths ending in .md
+  // Pattern: _agents/skills/ followed by one or more path chars (letters, numbers, -, _, /) then .md
+  const skillPathRegex = /_agents\/skills\/[\w\-\/]+\.md/g;
+  const matches = text.match(skillPathRegex);
+  return matches ? [...new Set(matches)] : [];
+}
+
+/**
+ * Validates that all skill file paths referenced in the prompt exist.
+ * @param prompt - The prompt text containing skill path references
+ * @param worktreeDir - The worktree directory to resolve paths from
+ * @throws Error if any skill file path does not exist
+ */
+export async function validateSkillPaths(
+  prompt: string,
+  worktreeDir: string
+): Promise<void> {
+  const skillPaths = extractSkillPaths(prompt);
+
+  if (skillPaths.length === 0) {
+    debug("No skill paths found in prompt");
+    return;
+  }
+
+  debug(`Found ${skillPaths.length} skill path(s) to validate: ${skillPaths.join(", ")}`);
+
+  const missingPaths: string[] = [];
+
+  for (const skillPath of skillPaths) {
+    const fullPath = `${worktreeDir}/${skillPath}`;
+    const file = Bun.file(fullPath);
+    if (!(await file.exists())) {
+      missingPaths.push(skillPath);
+    }
+  }
+
+  if (missingPaths.length > 0) {
+    throw new Error(
+      `Skill file(s) not found: ${missingPaths.join(", ")}. ` +
+        `Ensure these files exist in the worktree directory: ${worktreeDir}`
+    );
+  }
+
+  debug("All skill paths validated successfully");
+}
+
 export async function loadStepConfig(
   configPath: string,
-  issue: Issue
+  issue: Issue,
+  worktreeDir?: string
 ): Promise<StepConfig> {
   debug(`Loading config file: ${configPath}`);
 
@@ -38,6 +90,11 @@ export async function loadStepConfig(
 
   debug(`Variable substitution complete for issue: ${issue.id}`);
   debugObject("Final command args", substitutedArgs);
+
+  // Validate skill paths if worktreeDir is provided
+  if (worktreeDir) {
+    await validateSkillPaths(substitutedPrompt, worktreeDir);
+  }
 
   return {
     command: config.command,

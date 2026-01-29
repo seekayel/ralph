@@ -146,7 +146,7 @@
       "id": 21,
       "title": "Validate skill file paths exist before agent invocation",
       "description": "Config files reference _agents/skills/ paths. Add validation that these skill files exist before invoking agents to provide better error messages.",
-      "status": "todo",
+      "status": "done",
       "priority": "normal"
     },
     {

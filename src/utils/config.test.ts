@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  extractSkillPaths,
   issueToBranchName,
   issueToTopicName,
   issueToWorktreeName,
@@ -10,6 +11,7 @@ import {
   parseIssuePayload,
   readPayloadFromStdinOrFile,
   substituteVariables,
+  validateSkillPaths,
 } from "./config.js";
 
 describe("parseIssuePayload", () => {
@@ -390,5 +392,171 @@ describe("readPayloadFromStdinOrFile", () => {
     await expect(readPayloadFromStdinOrFile(payloadPath)).rejects.toThrow(
       "Issue payload must have a string 'description' field"
     );
+  });
+});
+
+describe("extractSkillPaths", () => {
+  it("extracts single skill path from text", () => {
+    const text = "Use the skill defined in `_agents/skills/research-plan-implement/skill.md`";
+    const paths = extractSkillPaths(text);
+    expect(paths).toEqual(["_agents/skills/research-plan-implement/skill.md"]);
+  });
+
+  it("extracts multiple skill paths from text", () => {
+    const text = `
+      Use \`_agents/skills/research-plan-implement/skill.md\` for research.
+      Use \`_agents/skills/code-review/skill.md\` for review.
+    `;
+    const paths = extractSkillPaths(text);
+    expect(paths).toContain("_agents/skills/research-plan-implement/skill.md");
+    expect(paths).toContain("_agents/skills/code-review/skill.md");
+    expect(paths.length).toBe(2);
+  });
+
+  it("returns empty array when no skill paths found", () => {
+    const text = "No skill paths in this text";
+    const paths = extractSkillPaths(text);
+    expect(paths).toEqual([]);
+  });
+
+  it("deduplicates repeated skill paths", () => {
+    const text = `
+      Use \`_agents/skills/code-review/skill.md\` first.
+      Then use \`_agents/skills/code-review/skill.md\` again.
+    `;
+    const paths = extractSkillPaths(text);
+    expect(paths).toEqual(["_agents/skills/code-review/skill.md"]);
+  });
+
+  it("extracts paths without backticks", () => {
+    const text = "Use _agents/skills/test/skill.md for testing";
+    const paths = extractSkillPaths(text);
+    expect(paths).toEqual(["_agents/skills/test/skill.md"]);
+  });
+});
+
+describe("validateSkillPaths", () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "ralph-skill-test-"));
+  });
+
+  afterEach(async () => {
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("does not throw when skill file exists", async () => {
+    const skillDir = join(tempDir, "_agents/skills/test-skill");
+    await mkdir(skillDir, { recursive: true });
+    await writeFile(join(skillDir, "skill.md"), "# Test Skill");
+
+    const prompt = "Use `_agents/skills/test-skill/skill.md`";
+
+    await expect(validateSkillPaths(prompt, tempDir)).resolves.toBeUndefined();
+  });
+
+  it("throws when skill file does not exist", async () => {
+    const prompt = "Use `_agents/skills/nonexistent/skill.md`";
+
+    await expect(validateSkillPaths(prompt, tempDir)).rejects.toThrow(
+      "Skill file(s) not found: _agents/skills/nonexistent/skill.md"
+    );
+  });
+
+  it("throws with multiple missing skill files", async () => {
+    const prompt = `
+      Use \`_agents/skills/missing1/skill.md\`.
+      Also use \`_agents/skills/missing2/skill.md\`.
+    `;
+
+    await expect(validateSkillPaths(prompt, tempDir)).rejects.toThrow(
+      "Skill file(s) not found:"
+    );
+  });
+
+  it("does not throw when prompt has no skill paths", async () => {
+    const prompt = "No skill paths in this prompt";
+
+    await expect(validateSkillPaths(prompt, tempDir)).resolves.toBeUndefined();
+  });
+
+  it("includes worktree directory in error message", async () => {
+    const prompt = "Use `_agents/skills/nonexistent/skill.md`";
+
+    await expect(validateSkillPaths(prompt, tempDir)).rejects.toThrow(
+      `Ensure these files exist in the worktree directory: ${tempDir}`
+    );
+  });
+});
+
+describe("loadStepConfig with skill validation", () => {
+  let tempDir: string;
+  const testIssue = {
+    id: "TEST-123",
+    title: "Test Issue",
+    description: "Test description",
+  };
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "ralph-config-skill-test-"));
+  });
+
+  afterEach(async () => {
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("validates skill paths when worktreeDir is provided", async () => {
+    const configContent = `---
+command: claude
+args: []
+---
+
+Use the skill in \`_agents/skills/nonexistent/skill.md\``;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    await expect(
+      loadStepConfig(configPath, testIssue, tempDir)
+    ).rejects.toThrow("Skill file(s) not found");
+  });
+
+  it("skips skill validation when worktreeDir is not provided", async () => {
+    const configContent = `---
+command: claude
+args: []
+---
+
+Use the skill in \`_agents/skills/nonexistent/skill.md\``;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    const config = await loadStepConfig(configPath, testIssue);
+
+    expect(config.command).toBe("claude");
+    expect(config.prompt).toContain("_agents/skills/nonexistent/skill.md");
+  });
+
+  it("succeeds when skill file exists", async () => {
+    const skillDir = join(tempDir, "_agents/skills/test-skill");
+    await mkdir(skillDir, { recursive: true });
+    await writeFile(join(skillDir, "skill.md"), "# Test Skill");
+
+    const configContent = `---
+command: claude
+args: []
+---
+
+Use the skill in \`_agents/skills/test-skill/skill.md\``;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    const config = await loadStepConfig(configPath, testIssue, tempDir);
+
+    expect(config.command).toBe("claude");
+    expect(config.prompt).toContain("_agents/skills/test-skill/skill.md");
   });
 });

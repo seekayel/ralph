@@ -19,7 +19,7 @@ export async function validate(
   debug(`Config path: ${configPath}`);
 
   try {
-    const config = await loadStepConfig(configPath, context.issue);
+    const config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
     const result = await runAgentCommand(config, context.worktreeDir);
 
     const needsChanges = checkIfNeedsChanges(result.stdout);

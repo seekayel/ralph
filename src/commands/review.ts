@@ -24,7 +24,7 @@ export async function review(
   debug(`Expected feedback file: ${expectedFile}`);
 
   try {
-    const config = await loadStepConfig(configPath, context.issue);
+    const config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
     const result = await runAgentCommand(config, context.worktreeDir);
 
     const feedbackFile = await checkReviewFileExists(

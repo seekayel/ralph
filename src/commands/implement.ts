@@ -18,7 +18,7 @@ export async function implement(
   debug(`Review feedback provided: ${!!reviewFeedback}`);
 
   try {
-    let config = await loadStepConfig(configPath, context.issue);
+    let config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
 
     // Load session ID from file if not in context (for standalone CLI invocations)
     let sessionId = context.sessionId;

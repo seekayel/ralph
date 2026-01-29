@@ -62,7 +62,7 @@ async function runResearchStep(
   const configPath = `${configDir}/${CONFIG_PATH}`;
 
   try {
-    const config = await loadStepConfig(configPath, context.issue);
+    const config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
     const result = await runAgentCommand(config, context.worktreeDir);
 
     return {
