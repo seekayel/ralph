@@ -111,7 +111,7 @@
       "id": 16,
       "title": "Add integration tests",
       "description": "Add integration tests for the full workflow with mocked claude/codex CLI invocations.",
-      "status": "todo",
+      "status": "done",
       "priority": "normal"
     },
     {
