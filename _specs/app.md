@@ -30,9 +30,54 @@ Template prompts should be stored in `src/prompts`
 **Error Handling**
 If the CLI is invoked in a directory that is not a Git work tree bare root directory, it should print an error message saying such and exit.
 
-**JSON Schema**
-Here is an example of the invoke payload:
+# AI Agent Invocation
 
+Ralph uses two AI agents for different workflow steps:
+
+- **Claude Code** (`claude`) - Used for Research, Plan, and Implement steps
+- **Codex** (`codex`) - Used for Validate, Review, and Publish steps
+
+Invoke each agent using its respective CLI command. Refer to `claude --help` and `codex --help` for available command flags and options. Ralph should invoke these commands as subprocesses and wait until the process returns before proceeding to the next step.
+
+# Configuration Files
+
+Configuration files define which agent and flags to use for each workflow step. Config files should be stored in `config/` and use markdown format with YAML front-matter.
+
+**Format:**
+```markdown
+---
+command: claude
+args:
+  - "--headless"
+  - "--allowedTools"
+  - "Read,Grep,Glob"
+---
+
+This is the prompt that will be sent to the model with ${variable} substitution.
+
+Issue: ${issue.id}
+Title: ${issue.title}
+Description: ${issue.description}
+```
+
+**Variable Substitution:**
+Both the front-matter and body of the config file should be processed with `${}` variable substitution before execution. Available variables include the JSON payload fields (e.g., `${issue.id}`, `${issue.title}`, `${issue.description}`).
+
+# File Naming Convention
+
+The `NNN_topic_name.md` naming convention for files in `_thoughts/` directories is defined in the research-plan-implement (RPI) skill located at `_agents/skills/research-plan-implement`. Refer to that skill for the specific naming rules and sequential numbering scheme.
+
+# JSON Payload Schema
+
+The JSON payload passed to Ralph must contain the following fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | The issue identifier (e.g., `HLN-9793`) |
+| `title` | string | The issue title |
+| `description` | string | The full issue description |
+
+**Example:**
 ```json
 {
     "id": "HLN-9793",
@@ -121,8 +166,9 @@ Output either that the code changes meet our quality bar or highlight the specif
 **Action**
 Invoke a codex session headless with a prompt to confirm that the changes on the current branch implement all the parts of the plan file, that no items were left incomplete and that all tests were written. Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc).
 
-
 **Success Criteria**
-If everything was implemented then use the gh cli tool to create a pull requests from the local branch. Otherwise print error message and exit.
+If the `gh` CLI is not found in the system PATH, print an error message instructing the user to install the GitHub CLI (e.g., "Error: GitHub CLI (gh) is required but not found. Please install it: https://cli.github.com/") and exit with a failure code.
+
+If everything was implemented then use the `gh` CLI tool to create a pull request from the local branch. Otherwise print error message and exit.
 
 
