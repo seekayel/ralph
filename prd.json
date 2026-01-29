@@ -125,7 +125,7 @@
       "id": 18,
       "title": "Add end-to-end workflow test",
       "description": "Add E2E test that simulates the full workflow with mocked external CLI tools (claude, codex, gh).",
-      "status": "todo",
+      "status": "done",
       "priority": "low"
     }
   ]
