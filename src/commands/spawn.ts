@@ -8,6 +8,9 @@ import { createWorktree, worktreeExists } from "../utils/git.js";
 import { debug, debugObject } from "../utils/logger.js";
 import { runCommand } from "../utils/process.js";
 
+// Default timeout for shell commands: 5 minutes (300000 ms)
+const DEFAULT_COMMAND_TIMEOUT_MS = 300000;
+
 export async function spawn(
   rootDir: string,
   issue: Issue
@@ -153,19 +156,45 @@ function extractSetupCommands(readmeContent: string): {
   return commands;
 }
 
+export function getCommandTimeout(): number {
+  const envTimeout = process.env.RALPH_COMMAND_TIMEOUT_MS;
+  if (envTimeout) {
+    const parsed = Number.parseInt(envTimeout, 10);
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      debug(`Using custom command timeout: ${parsed}ms`);
+      return parsed;
+    }
+  }
+  return DEFAULT_COMMAND_TIMEOUT_MS;
+}
+
 async function runShellCommand(
   command: string,
-  cwd: string
+  cwd: string,
+  timeoutMs?: number
 ): Promise<{ success: boolean; stdout: string; stderr: string }> {
+  const timeout = timeoutMs ?? getCommandTimeout();
+  debug(`Running shell command with ${timeout}ms timeout: ${command}`);
+
   try {
-    const result = await $`sh -c ${command}`.cwd(cwd).quiet();
+    const result = await $`sh -c ${command}`.cwd(cwd).quiet().timeout(timeout);
     return {
       success: true,
       stdout: result.stdout.toString(),
       stderr: result.stderr.toString(),
     };
   } catch (error) {
-    const err = error as { stdout?: Buffer; stderr?: Buffer };
+    const err = error as { stdout?: Buffer; stderr?: Buffer; name?: string };
+
+    // Check if it's a timeout error
+    if (err.name === "ShellError" && String(error).includes("timed out")) {
+      return {
+        success: false,
+        stdout: err.stdout?.toString() || "",
+        stderr: `Command timed out after ${timeout}ms: ${command}`,
+      };
+    }
+
     return {
       success: false,
       stdout: err.stdout?.toString() || "",

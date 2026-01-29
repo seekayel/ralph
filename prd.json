@@ -174,7 +174,7 @@
       "id": 25,
       "title": "Add timeout mechanism for shell commands in spawn step",
       "description": "The spawn step's runShellCommand() function has no timeout. If an install/build/test command hangs, the workflow stalls indefinitely. Add configurable timeout with reasonable default.",
-      "status": "todo",
+      "status": "done",
       "priority": "high"
     },
     {

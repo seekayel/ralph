@@ -150,6 +150,13 @@ ralph <command> --help
 ### 1. Spawn
 Creates a new git worktree and branch based on the issue ID. Runs install, build, and test commands from README.md.
 
+Shell commands (install, build, test) have a default timeout of 5 minutes (300,000 ms). Configure via environment variable:
+
+```bash
+# Set custom timeout (in milliseconds)
+export RALPH_COMMAND_TIMEOUT_MS=600000  # 10 minutes
+```
+
 ### 2. Research
 Uses Claude Code to explore the codebase and document findings in `_thoughts/research/`.
 
