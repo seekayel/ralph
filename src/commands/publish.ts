@@ -9,8 +9,7 @@ import { checkCommandExists, runAgentCommand } from "../utils/process.js";
 const CONFIG_PATH = "config/publish.md";
 
 export async function publish(
-  context: WorkflowContext,
-  configDir: string
+  context: WorkflowContext
 ): Promise<StepResult> {
   debug(`Publish step starting for issue: ${context.issue.id}`);
 
@@ -25,14 +24,11 @@ export async function publish(
     };
   }
 
-  const configPath = `${configDir}/${CONFIG_PATH}`;
-  debug(`Config path: ${configPath}`);
-
   try {
     // Sync agents to worktree before invoking Codex
     await syncAgentsToWorktree(context.worktreeDir);
 
-    const config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
+    const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
     const result = await runAgentCommand(config, context.worktreeDir);
 
     if (!result.success) {

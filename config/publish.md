@@ -1,8 +1,10 @@
 ---
 command: codex
 args:
-  - "--approval-mode"
-  - "full-auto"
+  - "exec"
+  - "--full-auto"
+  - "--sandbox"
+  - "read-only"
 ---
 
 Verify implementation completeness before creating a pull request.

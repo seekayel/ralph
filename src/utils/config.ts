@@ -1,6 +1,7 @@
 import { parse as parseYaml } from "yaml";
 import type { Issue, StepConfig } from "../types.js";
 import { debug, debugObject } from "./logger.js";
+import { getEmbeddedAsset } from "./assets.js";
 
 interface ConfigFrontMatter {
   command: string;
@@ -63,15 +64,14 @@ export async function loadStepConfig(
   issue: Issue,
   worktreeDir?: string
 ): Promise<StepConfig> {
-  debug(`Loading config file: ${configPath}`);
+  debug(`Loading config from embedded assets: ${configPath}`);
 
-  const file = Bun.file(configPath);
-  if (!(await file.exists())) {
-    throw new Error(`Config file not found: ${configPath}`);
+  const content = getEmbeddedAsset(configPath);
+  if (!content) {
+    throw new Error(`Config not found in embedded assets: ${configPath}`);
   }
 
-  const content = await file.text();
-  debug(`Config file loaded, size: ${content.length} bytes`);
+  debug(`Config loaded from embedded assets, size: ${content.length} bytes`);
 
   const { frontMatter, body } = parseFrontMatter(content);
   debug(`Parsed front-matter, body length: ${body.length} characters`);

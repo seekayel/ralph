@@ -1,51 +1,30 @@
-import { cp, mkdir, rm } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
 import { debug } from "./logger.js";
+import { extractAssetsIfNeeded } from "./assets.js";
 
 /**
- * Gets the root directory of the Ralph CLI installation.
- * This is where the bundled config/ and _agents/ directories live.
- */
-export function getRalphRootDir(): string {
-  // import.meta.dir in Bun gives the directory of this file
-  // Go up: utils/ -> src/ -> ralph-root/
-  return resolve(import.meta.dir, "..", "..");
-}
-
-/**
- * Gets the path to Ralph's bundled config directory.
- */
-export function getRalphConfigDir(): string {
-  return `${getRalphRootDir()}/config`;
-}
-
-/**
- * Gets the path to Ralph's bundled _agents directory.
- */
-export function getRalphAgentsDir(): string {
-  return `${getRalphRootDir()}/_agents`;
-}
-
-/**
- * Syncs the bundled _agents directory to the worktree's .ralph/ directory.
+ * Syncs the embedded _agents directory to the worktree's .ralph/ directory.
  * This allows coding agents (Claude/Codex) running in the worktree to read skill files.
+ *
+ * Extracts from embedded assets rather than copying from filesystem.
+ * Uses hash-based caching to skip extraction if assets haven't changed.
  *
  * @param worktreeDir - The target worktree directory
  * @returns The path to the .ralph/ directory in the worktree
  */
-export async function syncAgentsToWorktree(worktreeDir: string): Promise<string> {
-  const ralphAgentsDir = getRalphAgentsDir();
+export async function syncAgentsToWorktree(
+  worktreeDir: string
+): Promise<string> {
   const ralphDir = `${worktreeDir}/.ralph`;
-  const targetDir = `${ralphDir}/_agents`;
 
-  debug(`Syncing agents from ${ralphAgentsDir} to ${targetDir}`);
+  debug(`Syncing agents from embedded assets to ${ralphDir}`);
 
-  // Clean and recreate to ensure fresh copy
-  await rm(ralphDir, { recursive: true, force: true });
-  await mkdir(ralphDir, { recursive: true });
-  await cp(ralphAgentsDir, targetDir, { recursive: true });
+  const extracted = await extractAssetsIfNeeded(ralphDir, "_agents");
 
-  debug(`Agents synced successfully to ${ralphDir}`);
+  if (extracted) {
+    debug(`Agents extracted successfully to ${ralphDir}`);
+  } else {
+    debug(`Agents already up to date in ${ralphDir}`);
+  }
 
   return ralphDir;
 }

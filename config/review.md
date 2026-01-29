@@ -1,8 +1,9 @@
 ---
 command: codex
 args:
-  - "--approval-mode"
-  - "full-auto"
+  - "review"
+  - "--base"
+  - "main"
 ---
 
 Use the code-review skill defined in `.ralph/_agents/skills/code-review/skill.md` to review the code changes.

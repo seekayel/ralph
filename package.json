@@ -8,8 +8,9 @@
     "ralph": "./dist/index.js"
   },
   "scripts": {
+    "prebuild": "bun run scripts/bundle-assets.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
-    "dev": "bun run src/index.ts",
+    "dev": "bun run scripts/bundle-assets.ts && bun run src/index.ts",
     "test": "bun test",
     "lint": "bunx @biomejs/biome lint src/",
     "lint:fix": "bunx @biomejs/biome lint --write src/",

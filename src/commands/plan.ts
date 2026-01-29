@@ -9,8 +9,7 @@ const CONFIG_PATH = "config/plan.md";
 const MAX_RETRIES = 1;
 
 export async function plan(
-  context: WorkflowContext,
-  configDir: string
+  context: WorkflowContext
 ): Promise<StepResult> {
   const topicName = issueToTopicName(context.issue.title);
   const expectedFile = `_thoughts/plan/${context.issue.id}_${topicName}.md`;
@@ -24,7 +23,7 @@ export async function plan(
       debug(`Plan retry attempt ${attempt + 1}`);
     }
 
-    const result = await runPlanStep(context, configDir);
+    const result = await runPlanStep(context);
 
     if (result.success) {
       debug("Plan step succeeded, checking for output file");
@@ -56,16 +55,13 @@ export async function plan(
 }
 
 async function runPlanStep(
-  context: WorkflowContext,
-  configDir: string
+  context: WorkflowContext
 ): Promise<StepResult> {
-  const configPath = `${configDir}/${CONFIG_PATH}`;
-
   try {
     // Sync agents to worktree before invoking Claude
     await syncAgentsToWorktree(context.worktreeDir);
 
-    const config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
+    const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
     const result = await runAgentCommand(config, context.worktreeDir);
 
     return {

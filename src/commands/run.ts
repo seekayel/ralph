@@ -14,12 +14,10 @@ const MAX_REVIEW_ATTEMPTS = 4;
 
 export async function run(
   rootDir: string,
-  issue: Issue,
-  configDir: string
+  issue: Issue
 ): Promise<StepResult> {
   debug("Starting full workflow run");
   debug(`Root directory: ${rootDir}`);
-  debug(`Config directory: ${configDir}`);
   debugObject("Issue", issue);
 
   // Acquire lock to prevent concurrent execution
@@ -36,7 +34,7 @@ export async function run(
   }
 
   try {
-    return await runWorkflow(rootDir, issue, configDir);
+    return await runWorkflow(rootDir, issue);
   } finally {
     // Always release the lock when done
     await releaseLock(rootDir);
@@ -45,8 +43,7 @@ export async function run(
 
 async function runWorkflow(
   rootDir: string,
-  issue: Issue,
-  configDir: string
+  issue: Issue
 ): Promise<StepResult> {
   console.log(`\n=== Starting Ralph workflow for ${issue.id} ===\n`);
 
@@ -59,7 +56,7 @@ async function runWorkflow(
 
   const context = spawnResult.context;
 
-  const researchResult = await research(context, configDir);
+  const researchResult = await research(context);
   if (!researchResult.success) {
     console.error(`Research failed: ${researchResult.message}`);
     return researchResult;
@@ -68,14 +65,14 @@ async function runWorkflow(
 
   let planValidated = false;
   while (!planValidated && context.planValidationAttempts < MAX_VALIDATION_ATTEMPTS) {
-    const planResult = await plan(context, configDir);
+    const planResult = await plan(context);
     if (!planResult.success) {
       console.error(`Plan failed: ${planResult.message}`);
       return planResult;
     }
     console.log(`✓ Plan: ${planResult.message}\n`);
 
-    const validateResult = await validate(context, configDir);
+    const validateResult = await validate(context);
     context.planValidationAttempts++;
 
     if (!validateResult.success) {
@@ -103,7 +100,7 @@ async function runWorkflow(
   let reviewFeedback: string | undefined;
 
   while (!codeReviewPassed && context.codeReviewAttempts < MAX_REVIEW_ATTEMPTS) {
-    const implementResult = await implement(context, configDir, reviewFeedback);
+    const implementResult = await implement(context, reviewFeedback);
     if (!implementResult.success) {
       console.error(`Implement failed: ${implementResult.message}`);
       return implementResult;
@@ -114,7 +111,7 @@ async function runWorkflow(
     }
     console.log(`✓ Implement: ${implementResult.message}\n`);
 
-    const reviewResult = await review(context, configDir);
+    const reviewResult = await review(context);
     context.codeReviewAttempts++;
 
     if (!reviewResult.success) {
@@ -143,7 +140,7 @@ async function runWorkflow(
     }
   }
 
-  const publishResult = await publish(context, configDir);
+  const publishResult = await publish(context);
   if (!publishResult.success) {
     console.error(`Publish failed: ${publishResult.message}`);
     return publishResult;

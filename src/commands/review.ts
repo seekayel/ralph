@@ -13,22 +13,19 @@ export interface ReviewResult extends StepResult {
 }
 
 export async function review(
-  context: WorkflowContext,
-  configDir: string
+  context: WorkflowContext
 ): Promise<ReviewResult> {
-  const configPath = `${configDir}/${CONFIG_PATH}`;
   const topicName = issueToTopicName(context.issue.title);
   const expectedFile = `_thoughts/code-review/${context.issue.id}_${topicName}.md`;
 
   debug(`Review step starting for issue: ${context.issue.id}`);
-  debug(`Config path: ${configPath}`);
   debug(`Expected feedback file: ${expectedFile}`);
 
   try {
     // Sync agents to worktree before invoking Codex
     await syncAgentsToWorktree(context.worktreeDir);
 
-    const config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
+    const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
     const result = await runAgentCommand(config, context.worktreeDir);
 
     const feedbackFile = await checkReviewFileExists(

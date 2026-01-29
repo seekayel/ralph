@@ -9,20 +9,16 @@ const CONFIG_PATH = "config/implement.md";
 
 export async function implement(
   context: WorkflowContext,
-  configDir: string,
   reviewFeedback?: string
 ): Promise<StepResult> {
-  const configPath = `${configDir}/${CONFIG_PATH}`;
-
   debug(`Implement step starting for issue: ${context.issue.id}`);
-  debug(`Config path: ${configPath}`);
   debug(`Review feedback provided: ${!!reviewFeedback}`);
 
   try {
     // Sync agents to worktree before invoking Claude
     await syncAgentsToWorktree(context.worktreeDir);
 
-    let config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
+    let config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
 
     // Load session ID from file if not in context (for standalone CLI invocations)
     let sessionId = context.sessionId;

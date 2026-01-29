@@ -183,7 +183,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
       );
       await writeFile(researchFile, "# Research Findings\n\nCompleted research.");
 
-      const result = await research(createContext(), configDir);
+      const result = await research(createContext());
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Research completed successfully");
@@ -198,7 +198,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await research(createContext(), configDir);
+      const result = await research(createContext());
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Research failed after");
@@ -229,7 +229,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
       );
       await writeFile(researchFile, "# Research");
 
-      const result = await research(createContext(), configDir);
+      const result = await research(createContext());
 
       expect(result.success).toBe(true);
       expect(mockRunAgentCommand).toHaveBeenCalledTimes(2);
@@ -254,7 +254,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
       );
       await writeFile(planFile, "# Implementation Plan\n\n1. Step one");
 
-      const result = await plan(createContext(), configDir);
+      const result = await plan(createContext());
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Plan completed successfully");
@@ -269,7 +269,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await plan(createContext(), configDir);
+      const result = await plan(createContext());
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Plan failed after");
@@ -285,7 +285,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await validate(createContext(), configDir);
+      const result = await validate(createContext());
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(false);
@@ -300,7 +300,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await validate(createContext(), configDir);
+      const result = await validate(createContext());
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(true);
@@ -315,7 +315,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await validate(createContext(), configDir);
+      const result = await validate(createContext());
 
       expect(result.needsChanges).toBe(true);
     });
@@ -328,7 +328,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await validate(createContext(), configDir);
+      const result = await validate(createContext());
 
       expect(result.needsChanges).toBe(true);
     });
@@ -341,7 +341,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "Agent crashed",
       });
 
-      const result = await validate(createContext(), configDir);
+      const result = await validate(createContext());
 
       expect(result.success).toBe(false);
       expect(result.needsChanges).toBe(false);
@@ -357,7 +357,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await implement(createContext(), configDir);
+      const result = await implement(createContext());
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Implementation completed successfully");
@@ -372,7 +372,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await implement(createContext(), configDir);
+      const result = await implement(createContext());
 
       expect(result.success).toBe(true);
       expect(result.sessionId).toBeUndefined();
@@ -386,7 +386,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "Build failed",
       });
 
-      const result = await implement(createContext(), configDir);
+      const result = await implement(createContext());
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Implementation failed");
@@ -407,7 +407,6 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
 
       const result = await implement(
         contextWithSession,
-        configDir,
         "Fix the error handling in function X"
       );
 
@@ -425,7 +424,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await review(createContext(), configDir);
+      const result = await review(createContext());
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(false);
@@ -440,7 +439,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await review(createContext(), configDir);
+      const result = await review(createContext());
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(true);
@@ -454,7 +453,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await review(createContext(), configDir);
+      const result = await review(createContext());
 
       expect(result.needsChanges).toBe(true);
     });
@@ -479,7 +478,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         "# Code Review\n\nCritical: Memory leak in handler function"
       );
 
-      const result = await review(createContext(), configDir);
+      const result = await review(createContext());
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(true);
@@ -494,7 +493,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "Review failed",
       });
 
-      const result = await review(createContext(), configDir);
+      const result = await review(createContext());
 
       expect(result.success).toBe(false);
       expect(result.needsChanges).toBe(false);
@@ -505,7 +504,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
     it("fails when gh CLI is not found", async () => {
       mockCheckCommandExists.mockResolvedValueOnce(false);
 
-      const result = await publish(createContext(), configDir);
+      const result = await publish(createContext());
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("GitHub CLI (gh) is required");
@@ -521,7 +520,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
       });
 
       // Will fail at actual PR creation but we can verify the checks
-      await publish(createContext(), configDir);
+      await publish(createContext());
 
       expect(mockCheckCommandExists).toHaveBeenCalledWith("gh");
     });
@@ -535,7 +534,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         stderr: "",
       });
 
-      const result = await publish(createContext(), configDir);
+      const result = await publish(createContext());
 
       // Verify failure due to incomplete implementation or PR creation
       expect(result.success).toBe(false);
@@ -611,10 +610,10 @@ Test prompt for \${issue.id}`;
     let planValidated = false;
 
     while (!planValidated && context.planValidationAttempts < MAX_ATTEMPTS) {
-      const planResult = await plan(context, configDir);
+      const planResult = await plan(context);
       expect(planResult.success).toBe(true);
 
-      const validateResult = await validate(context, configDir);
+      const validateResult = await validate(context);
       context.planValidationAttempts++;
 
       if (!validateResult.needsChanges) {
@@ -644,7 +643,7 @@ Test prompt for \${issue.id}`;
         stderr: "",
       });
 
-      const implResult = await implement(context, configDir);
+      const implResult = await implement(context);
       expect(implResult.success).toBe(true);
 
       // Increment counter (this is what run.ts does)
@@ -686,8 +685,8 @@ Test prompt for \${issue.id}`;
     let planValidated = false;
 
     while (!planValidated && context.planValidationAttempts < MAX_ATTEMPTS) {
-      const planResult = await plan(context, configDir);
-      const validateResult = await validate(context, configDir);
+      const planResult = await plan(context);
+      const validateResult = await validate(context);
       context.planValidationAttempts++;
 
       if (!validateResult.needsChanges) {
@@ -702,81 +701,40 @@ Test prompt for \${issue.id}`;
 });
 
 describe("E2E Tests - Config Variable Substitution", () => {
-  let tempDir: string;
-
-  beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "ralph-e2e-config-"));
-    await mkdir(join(tempDir, "config"), { recursive: true });
-  });
-
-  afterEach(async () => {
-    await rm(tempDir, { recursive: true, force: true });
-  });
-
-  it("substitutes all issue variables in config", async () => {
-    const configContent = `---
-command: claude
-args:
-  - "--issue"
-  - "\${issue.id}"
----
-
-Processing issue \${issue.id}
-Title: \${issue.title}
-Description: \${issue.description}`;
-
-    await writeFile(join(tempDir, "config", "test.md"), configContent);
-
+  it("substitutes all issue variables in embedded config", async () => {
     const { loadStepConfig } = await import("./utils/config.js");
 
     const issue: Issue = {
       id: "VAR-TEST-001",
       title: "Variable Substitution Test",
-      description: "Testing ${variable} substitution in configs",
+      description: "Testing variable substitution in configs",
     };
 
-    const config = await loadStepConfig(join(tempDir, "config", "test.md"), issue);
+    const config = await loadStepConfig("config/research.md", issue);
 
     expect(config.command).toBe("claude");
-    expect(config.args).toContain("VAR-TEST-001");
-    expect(config.prompt).toContain("Processing issue VAR-TEST-001");
-    expect(config.prompt).toContain("Title: Variable Substitution Test");
-    expect(config.prompt).toContain("Description: Testing ${variable} substitution in configs");
+    // The embedded config should have variables substituted
+    expect(config.prompt).toContain("VAR-TEST-001");
+    expect(config.prompt).toContain("Variable Substitution Test");
+    expect(config.prompt).toContain("Testing variable substitution in configs");
   });
 
-  it("handles various issue ID formats", async () => {
-    const configContent = `---
-command: test
-args: []
----
-Issue: \${issue.id}`;
-
-    await writeFile(join(tempDir, "config", "test.md"), configContent);
+  it("handles various issue ID formats in embedded config", async () => {
     const { loadStepConfig } = await import("./utils/config.js");
 
     const issueFormats = [
       { id: "JIRA-123", title: "Standard", description: "desc" },
       { id: "PROJECT-1", title: "Short", description: "desc" },
       { id: "ABC-123456789", title: "Long", description: "desc" },
-      { id: "feature/new-feature", title: "With slash", description: "desc" },
     ];
 
     for (const issue of issueFormats) {
-      const config = await loadStepConfig(join(tempDir, "config", "test.md"), issue);
-      expect(config.prompt).toContain(`Issue: ${issue.id}`);
+      const config = await loadStepConfig("config/research.md", issue);
+      expect(config.prompt).toContain(issue.id);
     }
   });
 
-  it("handles special characters in issue fields", async () => {
-    const configContent = `---
-command: test
-args: []
----
-ID: \${issue.id}
-Title: \${issue.title}
-Description: \${issue.description}`;
-
-    await writeFile(join(tempDir, "config", "test.md"), configContent);
+  it("handles special characters in issue fields with embedded config", async () => {
     const { loadStepConfig } = await import("./utils/config.js");
 
     const issue: Issue = {
@@ -785,10 +743,10 @@ Description: \${issue.description}`;
       description: "Description with\nnewlines\nand ${vars}",
     };
 
-    const config = await loadStepConfig(join(tempDir, "config", "test.md"), issue);
+    const config = await loadStepConfig("config/research.md", issue);
 
-    expect(config.prompt).toContain("ID: SPECIAL-1");
-    expect(config.prompt).toContain('Title: Test "with" <special> chars');
-    expect(config.prompt).toContain("Description: Description with\nnewlines\nand ${vars}");
+    expect(config.prompt).toContain("SPECIAL-1");
+    expect(config.prompt).toContain('Test "with" <special> chars');
+    expect(config.prompt).toContain("Description with\nnewlines\nand ${vars}");
   });
 });

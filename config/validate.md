@@ -1,8 +1,10 @@
 ---
 command: codex
 args:
-  - "--approval-mode"
-  - "full-auto"
+  - "exec"
+  - "--full-auto"
+  - "--sandbox"
+  - "read-only"
 ---
 
 Review and validate the implementation plan for quality and completeness.

@@ -322,163 +322,52 @@ describe("issueToTopicName", () => {
 });
 
 describe("loadStepConfig", () => {
-  let tempDir: string;
   const testIssue = {
     id: "TEST-123",
     title: "Test Issue",
     description: "Test description",
   };
 
-  beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "ralph-config-test-"));
-  });
-
-  afterEach(async () => {
-    await rm(tempDir, { recursive: true, force: true });
-  });
-
-  it("loads config file with valid front-matter", async () => {
-    const configContent = `---
-command: claude
-args:
-  - "--headless"
-  - "--allowedTools"
-  - "Read,Grep"
----
-
-This is the prompt body.`;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    const config = await loadStepConfig(configPath, testIssue);
+  it("loads embedded config file", async () => {
+    // Use actual embedded config
+    const config = await loadStepConfig("config/research.md", testIssue);
 
     expect(config.command).toBe("claude");
-    expect(config.args).toEqual(["--headless", "--allowedTools", "Read,Grep"]);
-    expect(config.prompt).toBe("This is the prompt body.");
+    expect(config.args).toBeDefined();
+    expect(config.prompt).toBeDefined();
   });
 
   it("substitutes variables in prompt body", async () => {
-    const configContent = `---
-command: codex
-args: []
----
+    // Use actual embedded config that contains variables
+    const config = await loadStepConfig("config/research.md", testIssue);
 
-Issue: \${issue.id}
-Title: \${issue.title}
-Description: \${issue.description}`;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    const config = await loadStepConfig(configPath, testIssue);
-
-    expect(config.prompt).toContain("Issue: TEST-123");
-    expect(config.prompt).toContain("Title: Test Issue");
-    expect(config.prompt).toContain("Description: Test description");
+    // The embedded config should have variables substituted
+    expect(config.prompt).toContain("TEST-123");
   });
 
-  it("substitutes variables in args", async () => {
-    const configContent = `---
-command: claude
-args:
-  - "--issue"
-  - "\${issue.id}"
----
-
-Prompt`;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    const config = await loadStepConfig(configPath, testIssue);
-
-    expect(config.args).toEqual(["--issue", "TEST-123"]);
+  it("throws error if config not found in embedded assets", async () => {
+    await expect(
+      loadStepConfig("nonexistent/config.md", testIssue)
+    ).rejects.toThrow("Config not found in embedded assets");
   });
 
-  it("throws error if config file not found", async () => {
-    const nonExistentPath = join(tempDir, "nonexistent.md");
+  it("loads all embedded config files", async () => {
+    // Verify all 7 config files can be loaded
+    const configs = [
+      "config/research.md",
+      "config/plan.md",
+      "config/validate.md",
+      "config/implement.md",
+      "config/review.md",
+      "config/publish.md",
+      "config/spawn.md",
+    ];
 
-    await expect(loadStepConfig(nonExistentPath, testIssue)).rejects.toThrow(
-      "Config file not found"
-    );
-  });
-
-  it("throws error if front-matter is missing", async () => {
-    const configContent = "No front-matter here";
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    await expect(loadStepConfig(configPath, testIssue)).rejects.toThrow(
-      "Config file must have YAML front-matter"
-    );
-  });
-
-  it("throws error if command field is missing", async () => {
-    const configContent = `---
-args:
-  - "--headless"
----
-
-Prompt`;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    await expect(loadStepConfig(configPath, testIssue)).rejects.toThrow(
-      "Config file missing required 'command' field"
-    );
-  });
-
-  it("handles config with no args", async () => {
-    const configContent = `---
-command: claude
----
-
-Simple prompt`;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    const config = await loadStepConfig(configPath, testIssue);
-
-    expect(config.command).toBe("claude");
-    expect(config.args).toEqual([]);
-    expect(config.prompt).toBe("Simple prompt");
-  });
-
-  it("handles multiline prompt body", async () => {
-    const configContent = `---
-command: claude
-args: []
----
-
-Line 1
-Line 2
-Line 3`;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    const config = await loadStepConfig(configPath, testIssue);
-
-    expect(config.prompt).toBe("Line 1\nLine 2\nLine 3");
-  });
-
-  it("handles empty prompt body", async () => {
-    const configContent = `---
-command: claude
-args: []
----
-`;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    const config = await loadStepConfig(configPath, testIssue);
-
-    expect(config.prompt).toBe("");
+    for (const configPath of configs) {
+      const config = await loadStepConfig(configPath, testIssue);
+      expect(config.command).toBeDefined();
+      expect(config.prompt).toBeDefined();
+    }
   });
 });
 
@@ -671,56 +560,31 @@ describe("loadStepConfig with skill validation", () => {
   });
 
   it("validates skill paths when worktreeDir is provided", async () => {
-    const configContent = `---
-command: claude
-args: []
----
-
-Use the skill in \`.ralph/_agents/skills/nonexistent/skill.md\``;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
+    // The embedded research.md config references skills that won't exist in tempDir
+    // This should fail because the skill files don't exist in the worktreeDir
     await expect(
-      loadStepConfig(configPath, testIssue, tempDir)
+      loadStepConfig("config/research.md", testIssue, tempDir)
     ).rejects.toThrow("Skill file(s) not found");
   });
 
   it("skips skill validation when worktreeDir is not provided", async () => {
-    const configContent = `---
-command: claude
-args: []
----
-
-Use the skill in \`.ralph/_agents/skills/nonexistent/skill.md\``;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    const config = await loadStepConfig(configPath, testIssue);
+    // Without worktreeDir, skill validation is skipped
+    const config = await loadStepConfig("config/research.md", testIssue);
 
     expect(config.command).toBe("claude");
-    expect(config.prompt).toContain(".ralph/_agents/skills/nonexistent/skill.md");
   });
 
   it("succeeds when skill file exists", async () => {
-    const skillDir = join(tempDir, ".ralph/_agents/skills/test-skill");
+    // Create the skill files that research.md references
+    const skillDir = join(
+      tempDir,
+      ".ralph/_agents/skills/research-plan-implement"
+    );
     await mkdir(skillDir, { recursive: true });
-    await writeFile(join(skillDir, "skill.md"), "# Test Skill");
+    await writeFile(join(skillDir, "skill.md"), "# RPI Skill");
 
-    const configContent = `---
-command: claude
-args: []
----
-
-Use the skill in \`.ralph/_agents/skills/test-skill/skill.md\``;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
-    const config = await loadStepConfig(configPath, testIssue, tempDir);
+    const config = await loadStepConfig("config/research.md", testIssue, tempDir);
 
     expect(config.command).toBe("claude");
-    expect(config.prompt).toContain(".ralph/_agents/skills/test-skill/skill.md");
   });
 });

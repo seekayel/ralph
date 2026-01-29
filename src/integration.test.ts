@@ -173,7 +173,7 @@ Confirm implementation is complete for issue \${issue.id}`;
       );
       await writeFile(researchFile, "# Research findings\n\nSome research...");
 
-      const result = await research(testContext, tempDir);
+      const result = await research(testContext);
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Research completed successfully");
@@ -191,7 +191,7 @@ Confirm implementation is complete for issue \${issue.id}`;
 
       // Don't create the research file - should fail
 
-      const result = await research(testContext, tempDir);
+      const result = await research(testContext);
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Research failed after");
@@ -222,7 +222,7 @@ Confirm implementation is complete for issue \${issue.id}`;
       );
       await writeFile(researchFile, "# Research findings");
 
-      const result = await research(testContext, tempDir);
+      const result = await research(testContext);
 
       expect(result.success).toBe(true);
       expect(mockRunAgentCommand).toHaveBeenCalledTimes(2);
@@ -247,7 +247,7 @@ Confirm implementation is complete for issue \${issue.id}`;
       );
       await writeFile(planFile, "# Implementation Plan\n\n1. Step one...");
 
-      const result = await plan(testContext, tempDir);
+      const result = await plan(testContext);
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Plan completed successfully");
@@ -262,7 +262,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "",
       });
 
-      const result = await plan(testContext, tempDir);
+      const result = await plan(testContext);
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Plan failed after");
@@ -278,7 +278,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "",
       });
 
-      const result = await validate(testContext, tempDir);
+      const result = await validate(testContext);
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(false);
@@ -293,7 +293,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "",
       });
 
-      const result = await validate(testContext, tempDir);
+      const result = await validate(testContext);
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(true);
@@ -308,7 +308,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "Validation error",
       });
 
-      const result = await validate(testContext, tempDir);
+      const result = await validate(testContext);
 
       expect(result.success).toBe(false);
       expect(result.needsChanges).toBe(false);
@@ -324,7 +324,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "",
       });
 
-      const result = await implement(testContext, tempDir);
+      const result = await implement(testContext);
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Implementation completed successfully");
@@ -339,7 +339,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "Build failed",
       });
 
-      const result = await implement(testContext, tempDir);
+      const result = await implement(testContext);
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Implementation failed");
@@ -360,7 +360,6 @@ Confirm implementation is complete for issue \${issue.id}`;
 
       const result = await implement(
         contextWithSession,
-        tempDir,
         "Fix the error handling in function X"
       );
 
@@ -379,7 +378,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "",
       });
 
-      const result = await review(testContext, tempDir);
+      const result = await review(testContext);
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(false);
@@ -394,7 +393,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "",
       });
 
-      const result = await review(testContext, tempDir);
+      const result = await review(testContext);
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(true);
@@ -420,7 +419,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         "# Code Review\n\nCritical: Memory leak in handler function"
       );
 
-      const result = await review(testContext, tempDir);
+      const result = await review(testContext);
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(true);
@@ -432,7 +431,7 @@ Confirm implementation is complete for issue \${issue.id}`;
     it("fails when gh CLI is not found", async () => {
       mockCheckCommandExists.mockResolvedValueOnce(false);
 
-      const result = await publish(testContext, tempDir);
+      const result = await publish(testContext);
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("GitHub CLI (gh) is required");
@@ -450,7 +449,7 @@ Confirm implementation is complete for issue \${issue.id}`;
       // Note: The actual PR creation uses Bun's $ which we can't easily mock
       // This test verifies the logic up to the PR creation
 
-      const result = await publish(testContext, tempDir);
+      const result = await publish(testContext);
 
       // Since we can't mock Bun's $, the PR creation will fail
       // but we can verify the checkCommandExists and runAgentCommand were called
@@ -467,7 +466,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         stderr: "",
       });
 
-      const result = await publish(testContext, tempDir);
+      const result = await publish(testContext);
 
       expect(result.success).toBe(false);
       // The message could be about incomplete implementation or PR creation failure
@@ -481,47 +480,22 @@ Confirm implementation is complete for issue \${issue.id}`;
 });
 
 describe("Integration Tests - Config Loading and Variable Substitution", () => {
-  let tempDir: string;
-
   const testIssue: Issue = {
     id: "ISSUE-456",
     title: "Add User Authentication",
     description: "Implement OAuth2 authentication flow",
   };
 
-  beforeEach(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "ralph-config-integration-"));
-  });
-
-  afterEach(async () => {
-    await rm(tempDir, { recursive: true, force: true });
-  });
-
-  it("substitutes all issue variables in config prompt", async () => {
-    const configContent = `---
-command: claude
-args:
-  - "--issue-id"
-  - "\${issue.id}"
----
-
-Working on issue \${issue.id}
-Title: \${issue.title}
-Description: \${issue.description}`;
-
-    const configPath = join(tempDir, "test.md");
-    await writeFile(configPath, configContent);
-
+  it("substitutes all issue variables in embedded config prompt", async () => {
+    // Use actual embedded config
     const { loadStepConfig } = await import("./utils/config.js");
-    const config = await loadStepConfig(configPath, testIssue);
+    const config = await loadStepConfig("config/research.md", testIssue);
 
     expect(config.command).toBe("claude");
-    expect(config.args).toContain("ISSUE-456");
-    expect(config.prompt).toContain("Working on issue ISSUE-456");
-    expect(config.prompt).toContain("Title: Add User Authentication");
-    expect(config.prompt).toContain(
-      "Description: Implement OAuth2 authentication flow"
-    );
+    // The embedded config should have variables substituted
+    expect(config.prompt).toContain("ISSUE-456");
+    expect(config.prompt).toContain("Add User Authentication");
+    expect(config.prompt).toContain("Implement OAuth2 authentication flow");
   });
 });
 
@@ -590,8 +564,16 @@ describe("Integration Tests - Error Handling", () => {
     await rm(tempDir, { recursive: true, force: true });
   });
 
-  it("handles missing config file gracefully", async () => {
-    const result = await research(testContext, "/nonexistent/path");
+  it("handles agent failure gracefully", async () => {
+    // Mock agent command to fail
+    mockRunAgentCommand.mockResolvedValue({
+      success: false,
+      exitCode: 1,
+      stdout: "",
+      stderr: "Agent error",
+    });
+
+    const result = await research(testContext);
 
     expect(result.success).toBe(false);
     // The error message indicates the step failed - either directly or after retries
@@ -615,7 +597,7 @@ args: []
 Test prompt`
     );
 
-    const result = await research(testContext, tempDir);
+    const result = await research(testContext);
 
     expect(result.success).toBe(false);
   });

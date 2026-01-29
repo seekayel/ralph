@@ -144,5 +144,8 @@ bun.lockb
 # Build output
 dist/
 
+# Generated files (created at build time)
+src/generated/
+
 # _thoughts workflow artifacts (generated during Ralph runs)
 _thoughts/

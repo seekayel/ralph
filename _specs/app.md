@@ -24,11 +24,50 @@ Ralph should be invoked from the root directory (`ralph-git/`) which contains th
 
 # General Guidance
 
-**Prompts**
-Template prompts should be stored in `src/prompts`
-
 **Error Handling**
 If the CLI is invoked in a directory that is not a Git work tree bare root directory, it should print an error message saying such and exit.
+
+# Asset Bundling
+
+The Ralph CLI bundles its configuration files and agent definitions into the compiled binary. This allows Ralph to be installed and run from any location without requiring the source `config/` and `_agents/` directories to be present.
+
+**Build-Time Bundling:**
+- The `scripts/bundle-assets.ts` script runs before each build (via `prebuild` npm script)
+- It reads all markdown files from `config/` and `_agents/` directories
+- It generates `src/generated/embedded-assets.ts` containing all file contents as string literals
+- This generated file is bundled into the final `dist/index.js` binary
+
+**Runtime Extraction:**
+- When Ralph runs a workflow step, it extracts the bundled `_agents/` to the worktree's `.ralph/` directory
+- The path becomes: `$WORKTREE_DIR/.ralph/_agents/`
+- A hash file (`.ralph/.assets-hash`) tracks whether extraction is needed
+- Config files are loaded directly from embedded assets (no extraction needed)
+
+**Directory Structure After Extraction:**
+```
+worktree-dir/
+├── .ralph/
+│   ├── .assets-hash     # Hash for cache invalidation
+│   └── _agents/
+│       ├── AGENTS.md
+│       ├── agents/
+│       │   ├── codebase-analyzer.md
+│       │   ├── codebase-locator.md
+│       │   └── pattern-finder.md
+│       └── skills/
+│           ├── code-review/
+│           │   └── skill.md
+│           └── research-plan-implement/
+│               └── skill.md
+├── _thoughts/           # Workflow artifacts
+└── ... (project files)
+```
+
+**Skill Path References:**
+Config files reference skills using the `.ralph/` prefix path, which resolves to the worktree directory:
+```
+Use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md`
+```
 
 # AI Agent Invocation
 
@@ -41,15 +80,24 @@ Invoke each agent using its respective CLI command. Refer to `claude --help` and
 
 # Configuration Files
 
-Configuration files define which agent and flags to use for each workflow step. Config files should be stored in `config/` and use markdown format with YAML front-matter.
+Configuration files define which agent and flags to use for each workflow step. Config files are stored in `config/` during development and embedded into the CLI binary at build time. They use markdown format with YAML front-matter.
+
+**Available Config Files:**
+- `config/spawn.md` - Spawn step configuration
+- `config/research.md` - Research step configuration
+- `config/plan.md` - Plan step configuration
+- `config/validate.md` - Validate step configuration
+- `config/implement.md` - Implement step configuration
+- `config/review.md` - Review step configuration
+- `config/publish.md` - Publish step configuration
 
 **Format:**
 ```markdown
 ---
 command: claude
 args:
-  - "--headless"
-  - "--allowedTools"
+  - "--print"
+  - "--allowed-tools"
   - "Read,Grep,Glob"
 ---
 
@@ -58,14 +106,19 @@ This is the prompt that will be sent to the model with ${variable} substitution.
 Issue: ${issue.id}
 Title: ${issue.title}
 Description: ${issue.description}
+
+Use the skill in `.ralph/_agents/skills/research-plan-implement/skill.md`
 ```
 
 **Variable Substitution:**
 Both the front-matter and body of the config file should be processed with `${}` variable substitution before execution. Available variables include the JSON payload fields (e.g., `${issue.id}`, `${issue.title}`, `${issue.description}`).
 
+**Skill Path Validation:**
+Before running an agent, the CLI validates that all skill paths referenced in the prompt (matching pattern `.ralph/_agents/skills/*.md`) exist in the worktree's `.ralph/` directory.
+
 # File Naming Convention
 
-The `NNN_topic_name.md` naming convention for files in `_thoughts/` directories is defined in the research-plan-implement (RPI) skill located at `_agents/skills/research-plan-implement`. Refer to that skill for the specific naming rules and sequential numbering scheme.
+The `NNN_topic_name.md` naming convention for files in `_thoughts/` directories is defined in the research-plan-implement (RPI) skill located at `.ralph/_agents/skills/research-plan-implement/skill.md`. Refer to that skill for the specific naming rules and sequential numbering scheme.
 
 # JSON Payload Schema
 
@@ -117,7 +170,7 @@ Only proceed if the tests complete successfully. Otherwise print an error messag
 ## Research
 
 **Action**
-Invoke a claude code session headless with a prompt to use the research-plan-implement workflow in `_agents/skills/research-plan-implement` to research the code base in relation to the requested issue. Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc).
+Invoke a claude code session headless with a prompt to use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md` to research the code base in relation to the requested issue. Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc).
 
 **Success Criteria**
 Only proceed if the claude code session successfully generates a `_thoughts/research/NNN_topic_name.md` file. Otherwise retry once, if fails a second time then print error message and exit with a failure.
@@ -126,7 +179,7 @@ Only proceed if the claude code session successfully generates a `_thoughts/rese
 ## Plan
 
 **Action**
-Invoke a claude code session headless with a prompt to use the research-plan-implement workflow in `_agents/skills/research-plan-implement` to plan an implementation and testing plan for the the code base in relation to the requested issue using the `_thoughts/research/NNN_topic_name.md` research. Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc).
+Invoke a claude code session headless with a prompt to use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md` to plan an implementation and testing plan for the the code base in relation to the requested issue using the `_thoughts/research/NNN_topic_name.md` research. Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc).
 
 **Success Criteria**
 Only proceed if the claude code session successfully generates a `_thoughts/plan/NNN_topic_name.md` file. Otherwise retry once, if fails a second time then print error message and exit with a failure.
@@ -144,7 +197,7 @@ Output either that the plan meets our quality bar or highlight the specific part
 ## Implement
 
 **Action**
-Invoke a claude code session headless with a prompt to use the research-plan-implement workflow in `_agents/skills/research-plan-implement` to implement the plan as detailed in `_thoughts/plan/NNN_topic_name.md` based on the research in `_thoughts/plan/NNN_topic_name.md`. Save the session id either in a local variable or temp file, for use in resuming a session if the code review step requires changes. Incremental commits are acceptable. The agent should run lint, build and test at consistent intervals. Tests that cover the feature being added should be added as per the testing plan in the plan file.
+Invoke a claude code session headless with a prompt to use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md` to implement the plan as detailed in `_thoughts/plan/NNN_topic_name.md` based on the research in `_thoughts/research/NNN_topic_name.md`. Save the session id either in a local variable or temp file, for use in resuming a session if the code review step requires changes. Incremental commits are acceptable. The agent should run lint, build and test at consistent intervals. Tests that cover the feature being added should be added as per the testing plan in the plan file.
 
 If the code review step invokes this step then provide the code review feedback file to the resumed claude code session along with instructions that the highlighted issues need to be resolved.
 
@@ -155,7 +208,7 @@ There are tests that exercise the added feature. The added feature has been writ
 ## Review
 
 **Action**
-Invoke a codex session headless with a prompt to use the code-review skill in `_agents/skills/code-review` do a code review of changes from the base branch (main). Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc). Ask for the review to be written to `_thoughts/code-review/NNN_topic_name.md` and structure output returned with if the code met quality bar.
+Invoke a codex session headless with a prompt to use the code-review skill in `.ralph/_agents/skills/code-review/skill.md` to do a code review of changes from the base branch (main). Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc). Ask for the review to be written to `_thoughts/code-review/NNN_topic_name.md` and structure output returned with if the code met quality bar.
 
 **Success Criteria**
 Output either that the code changes meet our quality bar or highlight the specific parts of the code that are problematic and why. If there are changes needed then go back and invoke the Implement stage if run in full work flow `run` mode, if in single `review` mode then exit with message as to outcome. If the code review requests changes a 4th time then instead of invoking the implement step, instead print error messaging and exit.

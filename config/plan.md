@@ -1,8 +1,8 @@
 ---
 command: claude
 args:
-  - "--headless"
-  - "--allowedTools"
+  - "--print"
+  - "--allowed-tools"
   - "Read,Grep,Glob,Bash(git status:git log:git diff:git show:git branch)"
 ---
 

@@ -16,7 +16,6 @@ import {
 } from "./utils/config.js";
 import { isGitBareWorktreeRoot } from "./utils/git.js";
 import { debug, setVerbose } from "./utils/logger.js";
-import { getRalphConfigDir } from "./utils/paths.js";
 
 const program = new Command();
 
@@ -87,10 +86,6 @@ async function validateEnvironment(): Promise<string> {
   return cwd;
 }
 
-function getConfigDir(): string {
-  return getRalphConfigDir();
-}
-
 program
   .command("run")
   .description("Run the full Ralph workflow (spawn -> research -> plan -> validate -> implement -> review -> publish)")
@@ -122,11 +117,10 @@ Environment Variables:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
-      const result = await run(rootDir, issue, configDir);
+      const result = await run(rootDir, issue);
 
       if (!result.success) {
         process.exit(1);
@@ -220,12 +214,11 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
       const context = createContextFromIssue(issue, rootDir);
-      const result = await research(context, configDir);
+      const result = await research(context);
 
       if (!result.success) {
         console.error(result.message);
@@ -277,12 +270,11 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
       const context = createContextFromIssue(issue, rootDir);
-      const result = await plan(context, configDir);
+      const result = await plan(context);
 
       if (!result.success) {
         console.error(result.message);
@@ -335,12 +327,11 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
       const context = createContextFromIssue(issue, rootDir);
-      const result = await validate(context, configDir);
+      const result = await validate(context);
 
       if (result.needsChanges) {
         console.log("Plan needs changes:");
@@ -394,7 +385,6 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
@@ -405,7 +395,7 @@ JSON Payload Schema:
         reviewFeedback = await Bun.file(options.feedback).text();
       }
 
-      const result = await implement(context, configDir, reviewFeedback);
+      const result = await implement(context, reviewFeedback);
 
       if (!result.success) {
         console.error(result.message);
@@ -462,12 +452,11 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
       const context = createContextFromIssue(issue, rootDir);
-      const result = await review(context, configDir);
+      const result = await review(context);
 
       if (result.needsChanges) {
         console.log("Code review found issues:");
@@ -526,12 +515,11 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
       const context = createContextFromIssue(issue, rootDir);
-      const result = await publish(context, configDir);
+      const result = await publish(context);
 
       if (!result.success) {
         console.error(result.message);

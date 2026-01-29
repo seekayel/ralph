@@ -1,5 +1,15 @@
 import { $ } from "bun";
+import { stat } from "node:fs/promises";
 import { debug } from "./logger.js";
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export async function isGitBareWorktreeRoot(dir: string): Promise<boolean> {
   debug(`Checking if directory is a git bare worktree root: ${dir}`);
@@ -7,8 +17,8 @@ export async function isGitBareWorktreeRoot(dir: string): Promise<boolean> {
     const bareDir = `${dir}/.bare`;
     const gitFile = `${dir}/.git`;
 
-    const bareExists = await Bun.file(bareDir).exists();
-    const gitFileExists = await Bun.file(gitFile).exists();
+    const bareExists = await pathExists(bareDir);
+    const gitFileExists = await pathExists(gitFile);
 
     debug(`.bare exists: ${bareExists}, .git exists: ${gitFileExists}`);
 
