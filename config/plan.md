@@ -4,6 +4,7 @@ args:
   - "--print"
   - "--allowed-tools"
   - "Read,Grep,Glob,Bash(git status:git log:git diff:git show:git branch)"
+  - "-p"
 ---
 
 Use the research-plan-implement workflow defined in `.ralph/_agents/skills/research-plan-implement/skill.md` to create an implementation plan.
