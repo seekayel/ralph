@@ -1,4 +1,5 @@
 import type { Issue, StepResult, WorkflowContext } from "../types.js";
+import { acquireLock, releaseLock } from "../utils/lock.js";
 import { debug, debugObject } from "../utils/logger.js";
 import { implement } from "./implement.js";
 import { plan } from "./plan.js";
@@ -21,6 +22,32 @@ export async function run(
   debug(`Config directory: ${configDir}`);
   debugObject("Issue", issue);
 
+  // Acquire lock to prevent concurrent execution
+  const lockResult = await acquireLock(rootDir, issue.id, "run");
+  if (!lockResult.acquired) {
+    const existingLock = lockResult.existingLock;
+    const lockInfo = existingLock
+      ? `PID ${existingLock.pid} started at ${existingLock.startedAt} for issue ${existingLock.issueId}`
+      : "unknown process";
+    return {
+      success: false,
+      message: `Another Ralph workflow is already running (${lockInfo}). Wait for it to complete or manually remove the lock file.`,
+    };
+  }
+
+  try {
+    return await runWorkflow(rootDir, issue, configDir);
+  } finally {
+    // Always release the lock when done
+    await releaseLock(rootDir);
+  }
+}
+
+async function runWorkflow(
+  rootDir: string,
+  issue: Issue,
+  configDir: string
+): Promise<StepResult> {
   console.log(`\n=== Starting Ralph workflow for ${issue.id} ===\n`);
 
   const spawnResult = await spawn(rootDir, issue);

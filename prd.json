@@ -183,6 +183,34 @@
       "description": "The spec requires 'Each CLI action should have an associated --help flag, which prints all relevant command flags and arguments that are possible.' Add comprehensive help text for each command.",
       "status": "done",
       "priority": "normal"
+    },
+    {
+      "id": 27,
+      "title": "Add lock mechanism to prevent concurrent execution",
+      "description": "Add a file-based lock mechanism to prevent multiple Ralph instances from running simultaneously on the same worktree. Create lock file at workflow start, remove on completion/failure, and check for stale locks.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 28,
+      "title": "Add workflow state persistence for resumable workflows",
+      "description": "Save workflow state (current step, context) to .ralph/state file to allow resuming interrupted workflows from last successful step.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": 29,
+      "title": "Add cleanup mechanism for failed worktrees",
+      "description": "When spawn or early workflow steps fail critically, provide option to clean up partial worktree directories.",
+      "status": "todo",
+      "priority": "low"
+    },
+    {
+      "id": 30,
+      "title": "Add tests for git utility edge cases",
+      "description": "Expand test coverage for git.ts including worktree creation errors, branch conflicts, and edge cases in bare repository detection.",
+      "status": "todo",
+      "priority": "normal"
     }
   ]
 }
