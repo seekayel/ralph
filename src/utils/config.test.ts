@@ -561,19 +561,19 @@ describe("readPayloadFromStdinOrFile", () => {
 
 describe("extractSkillPaths", () => {
   it("extracts single skill path from text", () => {
-    const text = "Use the skill defined in `_agents/skills/research-plan-implement/skill.md`";
+    const text = "Use the skill defined in `.ralph/_agents/skills/research-plan-implement/skill.md`";
     const paths = extractSkillPaths(text);
-    expect(paths).toEqual(["_agents/skills/research-plan-implement/skill.md"]);
+    expect(paths).toEqual([".ralph/_agents/skills/research-plan-implement/skill.md"]);
   });
 
   it("extracts multiple skill paths from text", () => {
     const text = `
-      Use \`_agents/skills/research-plan-implement/skill.md\` for research.
-      Use \`_agents/skills/code-review/skill.md\` for review.
+      Use \`.ralph/_agents/skills/research-plan-implement/skill.md\` for research.
+      Use \`.ralph/_agents/skills/code-review/skill.md\` for review.
     `;
     const paths = extractSkillPaths(text);
-    expect(paths).toContain("_agents/skills/research-plan-implement/skill.md");
-    expect(paths).toContain("_agents/skills/code-review/skill.md");
+    expect(paths).toContain(".ralph/_agents/skills/research-plan-implement/skill.md");
+    expect(paths).toContain(".ralph/_agents/skills/code-review/skill.md");
     expect(paths.length).toBe(2);
   });
 
@@ -585,17 +585,17 @@ describe("extractSkillPaths", () => {
 
   it("deduplicates repeated skill paths", () => {
     const text = `
-      Use \`_agents/skills/code-review/skill.md\` first.
-      Then use \`_agents/skills/code-review/skill.md\` again.
+      Use \`.ralph/_agents/skills/code-review/skill.md\` first.
+      Then use \`.ralph/_agents/skills/code-review/skill.md\` again.
     `;
     const paths = extractSkillPaths(text);
-    expect(paths).toEqual(["_agents/skills/code-review/skill.md"]);
+    expect(paths).toEqual([".ralph/_agents/skills/code-review/skill.md"]);
   });
 
   it("extracts paths without backticks", () => {
-    const text = "Use _agents/skills/test/skill.md for testing";
+    const text = "Use .ralph/_agents/skills/test/skill.md for testing";
     const paths = extractSkillPaths(text);
-    expect(paths).toEqual(["_agents/skills/test/skill.md"]);
+    expect(paths).toEqual([".ralph/_agents/skills/test/skill.md"]);
   });
 });
 
@@ -611,27 +611,27 @@ describe("validateSkillPaths", () => {
   });
 
   it("does not throw when skill file exists", async () => {
-    const skillDir = join(tempDir, "_agents/skills/test-skill");
+    const skillDir = join(tempDir, ".ralph/_agents/skills/test-skill");
     await mkdir(skillDir, { recursive: true });
     await writeFile(join(skillDir, "skill.md"), "# Test Skill");
 
-    const prompt = "Use `_agents/skills/test-skill/skill.md`";
+    const prompt = "Use `.ralph/_agents/skills/test-skill/skill.md`";
 
     await expect(validateSkillPaths(prompt, tempDir)).resolves.toBeUndefined();
   });
 
   it("throws when skill file does not exist", async () => {
-    const prompt = "Use `_agents/skills/nonexistent/skill.md`";
+    const prompt = "Use `.ralph/_agents/skills/nonexistent/skill.md`";
 
     await expect(validateSkillPaths(prompt, tempDir)).rejects.toThrow(
-      "Skill file(s) not found: _agents/skills/nonexistent/skill.md"
+      "Skill file(s) not found: .ralph/_agents/skills/nonexistent/skill.md"
     );
   });
 
   it("throws with multiple missing skill files", async () => {
     const prompt = `
-      Use \`_agents/skills/missing1/skill.md\`.
-      Also use \`_agents/skills/missing2/skill.md\`.
+      Use \`.ralph/_agents/skills/missing1/skill.md\`.
+      Also use \`.ralph/_agents/skills/missing2/skill.md\`.
     `;
 
     await expect(validateSkillPaths(prompt, tempDir)).rejects.toThrow(
@@ -646,7 +646,7 @@ describe("validateSkillPaths", () => {
   });
 
   it("includes worktree directory in error message", async () => {
-    const prompt = "Use `_agents/skills/nonexistent/skill.md`";
+    const prompt = "Use `.ralph/_agents/skills/nonexistent/skill.md`";
 
     await expect(validateSkillPaths(prompt, tempDir)).rejects.toThrow(
       `Ensure these files exist in the worktree directory: ${tempDir}`
@@ -676,7 +676,7 @@ command: claude
 args: []
 ---
 
-Use the skill in \`_agents/skills/nonexistent/skill.md\``;
+Use the skill in \`.ralph/_agents/skills/nonexistent/skill.md\``;
 
     const configPath = join(tempDir, "test.md");
     await writeFile(configPath, configContent);
@@ -692,7 +692,7 @@ command: claude
 args: []
 ---
 
-Use the skill in \`_agents/skills/nonexistent/skill.md\``;
+Use the skill in \`.ralph/_agents/skills/nonexistent/skill.md\``;
 
     const configPath = join(tempDir, "test.md");
     await writeFile(configPath, configContent);
@@ -700,11 +700,11 @@ Use the skill in \`_agents/skills/nonexistent/skill.md\``;
     const config = await loadStepConfig(configPath, testIssue);
 
     expect(config.command).toBe("claude");
-    expect(config.prompt).toContain("_agents/skills/nonexistent/skill.md");
+    expect(config.prompt).toContain(".ralph/_agents/skills/nonexistent/skill.md");
   });
 
   it("succeeds when skill file exists", async () => {
-    const skillDir = join(tempDir, "_agents/skills/test-skill");
+    const skillDir = join(tempDir, ".ralph/_agents/skills/test-skill");
     await mkdir(skillDir, { recursive: true });
     await writeFile(join(skillDir, "skill.md"), "# Test Skill");
 
@@ -713,7 +713,7 @@ command: claude
 args: []
 ---
 
-Use the skill in \`_agents/skills/test-skill/skill.md\``;
+Use the skill in \`.ralph/_agents/skills/test-skill/skill.md\``;
 
     const configPath = join(tempDir, "test.md");
     await writeFile(configPath, configContent);
@@ -721,6 +721,6 @@ Use the skill in \`_agents/skills/test-skill/skill.md\``;
     const config = await loadStepConfig(configPath, testIssue, tempDir);
 
     expect(config.command).toBe("claude");
-    expect(config.prompt).toContain("_agents/skills/test-skill/skill.md");
+    expect(config.prompt).toContain(".ralph/_agents/skills/test-skill/skill.md");
   });
 });

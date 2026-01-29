@@ -1,6 +1,7 @@
 import type { StepResult, WorkflowContext } from "../types.js";
 import { loadStepConfig } from "../utils/config.js";
 import { debug } from "../utils/logger.js";
+import { syncAgentsToWorktree } from "../utils/paths.js";
 import { runAgentCommand } from "../utils/process.js";
 import { loadSessionId, saveSessionId } from "../utils/session.js";
 
@@ -18,6 +19,9 @@ export async function implement(
   debug(`Review feedback provided: ${!!reviewFeedback}`);
 
   try {
+    // Sync agents to worktree before invoking Claude
+    await syncAgentsToWorktree(context.worktreeDir);
+
     let config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
 
     // Load session ID from file if not in context (for standalone CLI invocations)

@@ -5,7 +5,7 @@ args:
   - "full-auto"
 ---
 
-Use the code-review skill defined in `_agents/skills/code-review/skill.md` to review the code changes.
+Use the code-review skill defined in `.ralph/_agents/skills/code-review/skill.md` to review the code changes.
 
 ## Issue Details
 

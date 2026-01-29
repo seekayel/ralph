@@ -16,6 +16,7 @@ import {
 } from "./utils/config.js";
 import { isGitBareWorktreeRoot } from "./utils/git.js";
 import { debug, setVerbose } from "./utils/logger.js";
+import { getRalphConfigDir } from "./utils/paths.js";
 
 const program = new Command();
 
@@ -86,8 +87,8 @@ async function validateEnvironment(): Promise<string> {
   return cwd;
 }
 
-function getConfigDir(rootDir: string): string {
-  return `${rootDir}/main`;
+function getConfigDir(): string {
+  return getRalphConfigDir();
 }
 
 program
@@ -121,7 +122,7 @@ Environment Variables:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir(rootDir);
+    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
@@ -219,7 +220,7 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir(rootDir);
+    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
@@ -276,7 +277,7 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir(rootDir);
+    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
@@ -334,7 +335,7 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir(rootDir);
+    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
@@ -393,7 +394,7 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir(rootDir);
+    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
@@ -461,7 +462,7 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir(rootDir);
+    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
@@ -525,7 +526,7 @@ JSON Payload Schema:
 `)
   .action(async (options) => {
     const rootDir = await validateEnvironment();
-    const configDir = getConfigDir(rootDir);
+    const configDir = getConfigDir();
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);

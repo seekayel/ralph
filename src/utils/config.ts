@@ -9,12 +9,12 @@ interface ConfigFrontMatter {
 
 /**
  * Extracts skill file paths from config prompt text.
- * Looks for patterns like _agents/skills/foo/skill.md
+ * Looks for patterns like .ralph/_agents/skills/foo/skill.md
  */
 export function extractSkillPaths(text: string): string[] {
-  // Match _agents/skills/* paths ending in .md
-  // Pattern: _agents/skills/ followed by one or more path chars (letters, numbers, -, _, /) then .md
-  const skillPathRegex = /_agents\/skills\/[\w\-\/]+\.md/g;
+  // Match .ralph/_agents/skills/* paths ending in .md
+  // Pattern: .ralph/_agents/skills/ followed by one or more path chars (letters, numbers, -, _, /) then .md
+  const skillPathRegex = /\.ralph\/_agents\/skills\/[\w\-\/]+\.md/g;
   const matches = text.match(skillPathRegex);
   return matches ? [...new Set(matches)] : [];
 }

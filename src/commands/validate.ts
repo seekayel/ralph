@@ -1,6 +1,7 @@
 import type { StepResult, WorkflowContext } from "../types.js";
 import { loadStepConfig } from "../utils/config.js";
 import { debug } from "../utils/logger.js";
+import { syncAgentsToWorktree } from "../utils/paths.js";
 import { runAgentCommand } from "../utils/process.js";
 
 const CONFIG_PATH = "config/validate.md";
@@ -19,6 +20,9 @@ export async function validate(
   debug(`Config path: ${configPath}`);
 
   try {
+    // Sync agents to worktree before invoking Codex
+    await syncAgentsToWorktree(context.worktreeDir);
+
     const config = await loadStepConfig(configPath, context.issue, context.worktreeDir);
     const result = await runAgentCommand(config, context.worktreeDir);
 
