@@ -1,4 +1,26 @@
-This application is a CLI tool called Ralph. It is built and bundled using Bun 1.3.6 or higher. It runs a sequence of operations when invoked. It is invoked with a JSON payload that contains an issue ID, an issue title, and an issue description. It is invoked in a directory that contains subfolders for each of the git work trees of the relevant repository. The CLI, if invoked with `run`, will run all steps in the ralph-cli workflow. Otherwise, each of the individual steps can be run with `ralph` and then the name of the step. For example, `ralph spawn`, `ralph research`, or `ralph plan`. The @README.md    of this repo should contain all information needed by a human to be able to check out, install, build, and run any associated tests on this repository. There should be example execution commands for the Ralph workflow. Each CLI action should have an associated --help flag, which prints all relevant command flags and arguments that are possible.
+This application is a CLI tool called Ralph. It is built and bundled using Bun 1.3.6 or higher. It runs a sequence of operations when invoked. It is invoked with a JSON payload that contains an issue ID, an issue title, and an issue description. It is invoked in a directory that contains subfolders for each of the git work trees of the relevant repository. The CLI, if invoked with `run`, will run all steps in the ralph-cli workflow. Otherwise, each of the individual steps can be run with `ralph` and then the name of the step. For example, `ralph spawn`, `ralph research`, or `ralph plan`. The README.md of this repo should contain all information needed by a human to be able to check out, install, build, and run any associated tests on this repository. There should be example execution commands for the Ralph workflow. Each CLI action should have an associated --help flag, which prints all relevant command flags and arguments that are possible.
+
+# Prerequisites
+
+The README.md must document the following required dependencies:
+- **Bun** (v1.3.6 or higher) - Runtime and build tool
+- **gh** - GitHub CLI for creating pull requests in the Publish step
+- **claude** - Claude Code CLI for AI-assisted coding sessions
+- **codex** - Codex CLI for validation and review sessions
+
+# Git Worktree Structure
+
+Ralph expects to be invoked from a git repository using the bare worktree pattern:
+
+```
+ralph-git/
+├── .bare/       # Git database (bare repository)
+├── .git         # File pointing to .bare/
+├── hln-1234/    # Feature branch worktree (e.g., ralph-HLN-1234)
+└── main/        # Main branch working tree
+```
+
+Ralph should be invoked from the root directory (`ralph-git/`) which contains the worktree subdirectories.
 
 # General Guidance
 
@@ -8,6 +30,16 @@ Template prompts should be stored in `src/prompts`
 **Error Handling**
 If the CLI is invoked in a directory that is not a Git work tree bare root directory, it should print an error message saying such and exit.
 
+**JSON Schema**
+Here is an example of the invoke payload:
+
+```json
+{
+    "id": "HLN-9793",
+    "title": "Upgrade to Node v24",
+    "description": "We are on node 18 but need to be on v24+ to match our security and SOC-2 audit requirements.\n\nSee http://drive.google.com/p/9876fghgj/some-file.docx"
+}
+```
 
 # CLI
 
@@ -92,3 +124,5 @@ Invoke a codex session headless with a prompt to confirm that the changes on the
 
 **Success Criteria**
 If everything was implemented then use the gh cli tool to create a pull requests from the local branch. Otherwise print error message and exit.
+
+
