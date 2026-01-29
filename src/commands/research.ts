@@ -1,6 +1,7 @@
 import { Glob } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
 import { issueToTopicName, loadStepConfig } from "../utils/config.js";
+import { debug } from "../utils/logger.js";
 import { runAgentCommand } from "../utils/process.js";
 
 const CONFIG_PATH = "config/research.md";
@@ -13,19 +14,26 @@ export async function research(
   const topicName = issueToTopicName(context.issue.title);
   const expectedFile = `_thoughts/research/${context.issue.id}_${topicName}.md`;
 
+  debug(`Research step starting for issue: ${context.issue.id}`);
+  debug(`Expected output file: ${expectedFile}`);
+  debug(`Config directory: ${configDir}`);
+
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     if (attempt > 0) {
       console.log(`Retrying research step (attempt ${attempt + 1})...`);
+      debug(`Research retry attempt ${attempt + 1}`);
     }
 
     const result = await runResearchStep(context, configDir);
 
     if (result.success) {
+      debug("Research step succeeded, checking for output file");
       const fileExists = await checkResearchFileExists(
         context.worktreeDir,
         context.issue.id
       );
       if (fileExists) {
+        debug(`Research output file found: ${fileExists}`);
         return {
           success: true,
           message: "Research completed successfully",
@@ -33,11 +41,14 @@ export async function research(
         };
       }
       console.log(`Expected research file not found: ${expectedFile}`);
+      debug("Research output file not found at expected path");
     } else {
       console.log(`Research step failed: ${result.message}`);
+      debug(`Research step failed: ${result.message}`);
     }
   }
 
+  debug(`Research failed after ${MAX_RETRIES + 1} attempts`);
   return {
     success: false,
     message: `Research failed after ${MAX_RETRIES + 1} attempts. Expected file: ${expectedFile}`,

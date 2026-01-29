@@ -15,6 +15,7 @@ import {
   readPayloadFromStdinOrFile,
 } from "./utils/config.js";
 import { isGitBareWorktreeRoot } from "./utils/git.js";
+import { debug, setVerbose } from "./utils/logger.js";
 
 const program = new Command();
 
@@ -23,7 +24,15 @@ program
   .description(
     "AI-assisted development workflow CLI using Claude Code and Codex"
   )
-  .version("0.1.0");
+  .version("0.1.0")
+  .option("-v, --verbose", "Enable verbose logging for debugging")
+  .hook("preAction", (thisCommand) => {
+    const opts = thisCommand.opts();
+    if (opts.verbose) {
+      setVerbose(true);
+      debug("Verbose logging enabled");
+    }
+  });
 
 async function validateEnvironment(): Promise<string> {
   const cwd = process.cwd();

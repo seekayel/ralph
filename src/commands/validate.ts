@@ -1,5 +1,6 @@
 import type { StepResult, WorkflowContext } from "../types.js";
 import { loadStepConfig } from "../utils/config.js";
+import { debug } from "../utils/logger.js";
 import { runAgentCommand } from "../utils/process.js";
 
 const CONFIG_PATH = "config/validate.md";
@@ -14,13 +15,18 @@ export async function validate(
 ): Promise<ValidateResult> {
   const configPath = `${configDir}/${CONFIG_PATH}`;
 
+  debug(`Validate step starting for issue: ${context.issue.id}`);
+  debug(`Config path: ${configPath}`);
+
   try {
     const config = await loadStepConfig(configPath, context.issue);
     const result = await runAgentCommand(config, context.worktreeDir);
 
     const needsChanges = checkIfNeedsChanges(result.stdout);
+    debug(`Validation result - needsChanges: ${needsChanges}`);
 
     if (result.success && !needsChanges) {
+      debug("Validation passed - plan meets quality bar");
       return {
         success: true,
         needsChanges: false,
@@ -29,6 +35,7 @@ export async function validate(
     }
 
     if (needsChanges) {
+      debug("Validation found issues - plan needs changes");
       return {
         success: true,
         needsChanges: true,
@@ -36,12 +43,14 @@ export async function validate(
       };
     }
 
+    debug(`Validation failed: ${result.stderr}`);
     return {
       success: false,
       needsChanges: false,
       message: `Validation failed: ${result.stderr}`,
     };
   } catch (error) {
+    debug(`Validate step error: ${error}`);
     return {
       success: false,
       needsChanges: false,

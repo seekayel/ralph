@@ -1,6 +1,7 @@
 import { Glob } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
 import { issueToTopicName, loadStepConfig } from "../utils/config.js";
+import { debug } from "../utils/logger.js";
 import { runAgentCommand } from "../utils/process.js";
 
 const CONFIG_PATH = "config/plan.md";
@@ -13,19 +14,25 @@ export async function plan(
   const topicName = issueToTopicName(context.issue.title);
   const expectedFile = `_thoughts/plan/${context.issue.id}_${topicName}.md`;
 
+  debug(`Plan step starting for issue: ${context.issue.id}`);
+  debug(`Expected output file: ${expectedFile}`);
+
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     if (attempt > 0) {
       console.log(`Retrying plan step (attempt ${attempt + 1})...`);
+      debug(`Plan retry attempt ${attempt + 1}`);
     }
 
     const result = await runPlanStep(context, configDir);
 
     if (result.success) {
+      debug("Plan step succeeded, checking for output file");
       const fileExists = await checkPlanFileExists(
         context.worktreeDir,
         context.issue.id
       );
       if (fileExists) {
+        debug(`Plan output file found: ${fileExists}`);
         return {
           success: true,
           message: "Plan completed successfully",
@@ -33,11 +40,14 @@ export async function plan(
         };
       }
       console.log(`Expected plan file not found: ${expectedFile}`);
+      debug("Plan output file not found at expected path");
     } else {
       console.log(`Plan step failed: ${result.message}`);
+      debug(`Plan step failed: ${result.message}`);
     }
   }
 
+  debug(`Plan failed after ${MAX_RETRIES + 1} attempts`);
   return {
     success: false,
     message: `Plan failed after ${MAX_RETRIES + 1} attempts. Expected file: ${expectedFile}`,

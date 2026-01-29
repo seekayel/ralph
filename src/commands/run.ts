@@ -1,4 +1,5 @@
 import type { Issue, StepResult, WorkflowContext } from "../types.js";
+import { debug, debugObject } from "../utils/logger.js";
 import { implement } from "./implement.js";
 import { plan } from "./plan.js";
 import { publish } from "./publish.js";
@@ -15,6 +16,11 @@ export async function run(
   issue: Issue,
   configDir: string
 ): Promise<StepResult> {
+  debug("Starting full workflow run");
+  debug(`Root directory: ${rootDir}`);
+  debug(`Config directory: ${configDir}`);
+  debugObject("Issue", issue);
+
   console.log(`\n=== Starting Ralph workflow for ${issue.id} ===\n`);
 
   const spawnResult = await spawn(rootDir, issue);

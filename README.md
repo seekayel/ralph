@@ -118,6 +118,26 @@ ralph review --input issue.json
 ralph publish --input issue.json
 ```
 
+### Verbose Mode
+
+Enable detailed debug logging for troubleshooting:
+
+```bash
+# Verbose mode with run command
+ralph --verbose run --input issue.json
+
+# Verbose mode with individual steps
+ralph --verbose spawn --input issue.json
+ralph --verbose research --input issue.json
+```
+
+Verbose mode outputs timestamped debug information including:
+- Config file loading and parsing
+- Command execution details
+- Git worktree operations
+- Agent invocation parameters
+- Session ID management
+
 ### Help
 
 ```bash

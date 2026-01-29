@@ -2,6 +2,7 @@ import { $ } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
 import { loadStepConfig } from "../utils/config.js";
 import { getBaseBranch } from "../utils/git.js";
+import { debug } from "../utils/logger.js";
 import { checkCommandExists, runAgentCommand } from "../utils/process.js";
 
 const CONFIG_PATH = "config/publish.md";
@@ -10,7 +11,11 @@ export async function publish(
   context: WorkflowContext,
   configDir: string
 ): Promise<StepResult> {
+  debug(`Publish step starting for issue: ${context.issue.id}`);
+
   const ghExists = await checkCommandExists("gh");
+  debug(`GitHub CLI (gh) available: ${ghExists}`);
+
   if (!ghExists) {
     return {
       success: false,
@@ -20,12 +25,14 @@ export async function publish(
   }
 
   const configPath = `${configDir}/${CONFIG_PATH}`;
+  debug(`Config path: ${configPath}`);
 
   try {
     const config = await loadStepConfig(configPath, context.issue);
     const result = await runAgentCommand(config, context.worktreeDir);
 
     if (!result.success) {
+      debug(`Publish verification failed: ${result.stderr}`);
       return {
         success: false,
         message: `Publish verification failed: ${result.stderr}`,
@@ -33,8 +40,10 @@ export async function publish(
     }
 
     const implementationComplete = checkImplementationComplete(result.stdout);
+    debug(`Implementation complete check: ${implementationComplete}`);
 
     if (!implementationComplete) {
+      debug("Implementation incomplete - cannot create PR");
       return {
         success: false,
         message:
@@ -43,20 +52,24 @@ export async function publish(
     }
 
     console.log("Creating pull request...");
+    debug(`Creating pull request for branch: ${context.branchName}`);
     const prResult = await createPullRequest(context);
 
     if (prResult.success) {
+      debug(`Pull request created: ${prResult.url}`);
       return {
         success: true,
         message: `Pull request created: ${prResult.url}`,
       };
     }
 
+    debug(`Failed to create pull request: ${prResult.error}`);
     return {
       success: false,
       message: `Failed to create pull request: ${prResult.error}`,
     };
   } catch (error) {
+    debug(`Publish step error: ${error}`);
     return {
       success: false,
       message: `Failed to run publish step: ${error}`,

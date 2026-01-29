@@ -5,6 +5,7 @@ import {
   issueToWorktreeName,
 } from "../utils/config.js";
 import { createWorktree, worktreeExists } from "../utils/git.js";
+import { debug, debugObject } from "../utils/logger.js";
 import { runCommand } from "../utils/process.js";
 
 export async function spawn(
@@ -13,6 +14,10 @@ export async function spawn(
 ): Promise<StepResult & { context?: WorkflowContext }> {
   const branchName = issueToBranchName(issue.id);
   const worktreeName = issueToWorktreeName(issue.id);
+
+  debug(`Spawn step starting for issue: ${issue.id}`);
+  debugObject("Issue details", issue);
+  debug(`Branch name: ${branchName}, Worktree name: ${worktreeName}`);
 
   console.log(`Creating worktree for issue ${issue.id}...`);
 
@@ -120,6 +125,7 @@ function extractSetupCommands(readmeContent: string): {
   build?: string;
   test?: string;
 } {
+  debug("Extracting setup commands from README.md");
   const commands: { install?: string; build?: string; test?: string } = {};
 
   const npmInstallMatch = readmeContent.match(
@@ -143,6 +149,7 @@ function extractSetupCommands(readmeContent: string): {
     commands.test = testMatch[1];
   }
 
+  debugObject("Extracted setup commands", commands);
   return commands;
 }
 

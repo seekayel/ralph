@@ -1,5 +1,6 @@
 import { parse as parseYaml } from "yaml";
 import type { Issue, StepConfig } from "../types.js";
+import { debug, debugObject } from "./logger.js";
 
 interface ConfigFrontMatter {
   command: string;
@@ -10,15 +11,21 @@ export async function loadStepConfig(
   configPath: string,
   issue: Issue
 ): Promise<StepConfig> {
+  debug(`Loading config file: ${configPath}`);
+
   const file = Bun.file(configPath);
   if (!(await file.exists())) {
     throw new Error(`Config file not found: ${configPath}`);
   }
 
   const content = await file.text();
+  debug(`Config file loaded, size: ${content.length} bytes`);
+
   const { frontMatter, body } = parseFrontMatter(content);
+  debug(`Parsed front-matter, body length: ${body.length} characters`);
 
   const config = parseYaml(frontMatter) as ConfigFrontMatter;
+  debugObject("Parsed config front-matter", config);
 
   if (!config.command) {
     throw new Error(`Config file missing required 'command' field: ${configPath}`);
@@ -28,6 +35,9 @@ export async function loadStepConfig(
     substituteVariables(arg, issue)
   );
   const substitutedPrompt = substituteVariables(body, issue);
+
+  debug(`Variable substitution complete for issue: ${issue.id}`);
+  debugObject("Final command args", substitutedArgs);
 
   return {
     command: config.command,
@@ -93,16 +103,20 @@ export async function readPayloadFromStdinOrFile(
   let content: string;
 
   if (inputFile) {
+    debug(`Reading payload from file: ${inputFile}`);
     const file = Bun.file(inputFile);
     if (!(await file.exists())) {
       throw new Error(`Input file not found: ${inputFile}`);
     }
     content = await file.text();
   } else {
+    debug("Reading payload from stdin");
     content = await Bun.stdin.text();
   }
 
-  return parseIssuePayload(content.trim());
+  const issue = parseIssuePayload(content.trim());
+  debugObject("Parsed issue payload", issue);
+  return issue;
 }
 
 export function issueToBranchName(issueId: string): string {

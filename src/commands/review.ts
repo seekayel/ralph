@@ -1,6 +1,7 @@
 import { Glob } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
 import { issueToTopicName, loadStepConfig } from "../utils/config.js";
+import { debug } from "../utils/logger.js";
 import { runAgentCommand } from "../utils/process.js";
 
 const CONFIG_PATH = "config/review.md";
@@ -18,6 +19,10 @@ export async function review(
   const topicName = issueToTopicName(context.issue.title);
   const expectedFile = `_thoughts/code-review/${context.issue.id}_${topicName}.md`;
 
+  debug(`Review step starting for issue: ${context.issue.id}`);
+  debug(`Config path: ${configPath}`);
+  debug(`Expected feedback file: ${expectedFile}`);
+
   try {
     const config = await loadStepConfig(configPath, context.issue);
     const result = await runAgentCommand(config, context.worktreeDir);
@@ -26,13 +31,16 @@ export async function review(
       context.worktreeDir,
       context.issue.id
     );
+    debug(`Feedback file found: ${feedbackFile || "none"}`);
 
     const needsChanges = await checkIfNeedsCodeChanges(
       result.stdout,
       feedbackFile
     );
+    debug(`Review result - needsChanges: ${needsChanges}`);
 
     if (result.success && !needsChanges) {
+      debug("Code review passed - meets quality bar");
       return {
         success: true,
         needsChanges: false,
@@ -42,6 +50,7 @@ export async function review(
     }
 
     if (needsChanges) {
+      debug("Code review found issues that need to be addressed");
       return {
         success: true,
         needsChanges: true,
@@ -50,12 +59,14 @@ export async function review(
       };
     }
 
+    debug(`Review failed: ${result.stderr}`);
     return {
       success: false,
       needsChanges: false,
       message: `Review failed: ${result.stderr}`,
     };
   } catch (error) {
+    debug(`Review step error: ${error}`);
     return {
       success: false,
       needsChanges: false,

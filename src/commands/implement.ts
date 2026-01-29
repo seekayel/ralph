@@ -1,5 +1,6 @@
 import type { StepResult, WorkflowContext } from "../types.js";
 import { loadStepConfig } from "../utils/config.js";
+import { debug } from "../utils/logger.js";
 import { runAgentCommand } from "../utils/process.js";
 import { loadSessionId, saveSessionId } from "../utils/session.js";
 
@@ -12,6 +13,10 @@ export async function implement(
 ): Promise<StepResult> {
   const configPath = `${configDir}/${CONFIG_PATH}`;
 
+  debug(`Implement step starting for issue: ${context.issue.id}`);
+  debug(`Config path: ${configPath}`);
+  debug(`Review feedback provided: ${!!reviewFeedback}`);
+
   try {
     let config = await loadStepConfig(configPath, context.issue);
 
@@ -19,9 +24,13 @@ export async function implement(
     let sessionId = context.sessionId;
     if (!sessionId) {
       sessionId = await loadSessionId(context.worktreeDir);
+      debug(`Loaded session ID from file: ${sessionId || "none"}`);
+    } else {
+      debug(`Using session ID from context: ${sessionId}`);
     }
 
     if (reviewFeedback && sessionId) {
+      debug("Resuming session with review feedback");
       config = {
         ...config,
         prompt: `${config.prompt}\n\n## Code Review Feedback to Address\n\n${reviewFeedback}`,
@@ -34,13 +43,16 @@ export async function implement(
 
     const extractedSessionId = extractSessionId(result.stdout);
     const finalSessionId = extractedSessionId || sessionId;
+    debug(`Final session ID: ${finalSessionId || "none"}`);
 
     // Persist session ID to file for future invocations
     if (finalSessionId) {
       await saveSessionId(context.worktreeDir, finalSessionId);
+      debug("Session ID saved to file");
     }
 
     if (result.success) {
+      debug("Implementation completed successfully");
       return {
         success: true,
         message: "Implementation completed successfully",
@@ -48,12 +60,14 @@ export async function implement(
       };
     }
 
+    debug(`Implementation failed: ${result.stderr}`);
     return {
       success: false,
       message: `Implementation failed: ${result.stderr}`,
       sessionId: finalSessionId,
     };
   } catch (error) {
+    debug(`Implement step error: ${error}`);
     return {
       success: false,
       message: `Failed to run implement step: ${error}`,

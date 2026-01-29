@@ -139,7 +139,7 @@
       "id": 20,
       "title": "Add verbose/debug logging mode",
       "description": "Add --verbose or --debug flag to CLI commands to enable detailed logging of workflow steps, config loading, and external command invocations for troubleshooting.",
-      "status": "todo",
+      "status": "done",
       "priority": "normal"
     },
     {
@@ -155,6 +155,13 @@
       "description": "Update README.md to point to correct Codex CLI documentation instead of the deprecated github.com/openai/codex link.",
       "status": "todo",
       "priority": "low"
+    },
+    {
+      "id": 23,
+      "title": "Add tests for verbose logging mode",
+      "description": "Add unit tests for the logger utility including setVerbose, isVerbose, debug, debugObject, and info functions.",
+      "status": "done",
+      "priority": "normal"
     }
   ]
 }
