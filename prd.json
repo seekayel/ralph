@@ -1,0 +1,132 @@
+{
+  "project": "ralph",
+  "description": "CLI tool for AI-assisted development workflow using Claude Code and Codex for research, planning, implementation, and code review. https://github.com/seekayel/ralph-git",
+  "issues": [
+    {
+      "id": 1,
+      "title": "Project setup",
+      "description": "Initialize the Bun project with TypeScript, package.json, tsconfig.json, .gitignore updates, and basic project structure. Set up build and test scripts.",
+      "status": "done",
+      "priority": "critical"
+    },
+    {
+      "id": 2,
+      "title": "CLI entry point and argument parsing",
+      "description": "Create the main CLI entry point with subcommand routing (run, spawn, research, plan, validate, implement, review, publish). Implement --help flags for all commands. Accept JSON payload via stdin or --input flag.",
+      "status": "done",
+      "priority": "critical"
+    },
+    {
+      "id": 3,
+      "title": "Git worktree detection and validation",
+      "description": "Implement detection of git bare worktree root directory structure. Error if not in a valid ralph-git directory structure with .bare/ and worktree subdirectories.",
+      "status": "done",
+      "priority": "critical"
+    },
+    {
+      "id": 4,
+      "title": "Configuration file system",
+      "description": "Implement config file loading from config/ directory. Support markdown format with YAML front-matter. Implement ${variable} substitution for issue.id, issue.title, issue.description.",
+      "status": "done",
+      "priority": "critical"
+    },
+    {
+      "id": 5,
+      "title": "Spawn step implementation",
+      "description": "Create new git worktree and branch based on issue ID (e.g., HLN-14 becomes ralph-HLN-14). Read README.md for install/build/test commands and run them. Exit with error if tests fail.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 6,
+      "title": "Research step implementation",
+      "description": "Invoke claude code session headless with research-plan-implement workflow prompt. Allow git read commands only. Verify _thoughts/research/NNN_topic_name.md file is created. Retry once on failure.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 7,
+      "title": "Plan step implementation",
+      "description": "Invoke claude code session headless with plan prompt using research findings. Allow git read commands only. Verify _thoughts/plan/NNN_topic_name.md file is created. Retry once on failure.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 8,
+      "title": "Validate step implementation",
+      "description": "Invoke codex session headless to validate the plan meets quality bar. Output validation result. If changes needed in run mode, go back to Plan step. Exit after 4 failed validations.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 9,
+      "title": "Implement step implementation",
+      "description": "Invoke claude code session headless with implement prompt. Save session ID for potential resume. Run lint/build/test at intervals. Support resuming with code review feedback.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 10,
+      "title": "Review step implementation",
+      "description": "Invoke codex session headless with code-review skill prompt. Write review to _thoughts/code-review/NNN_topic_name.md. If changes needed in run mode, go back to Implement step. Exit after 4 failed reviews.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 11,
+      "title": "Publish step implementation",
+      "description": "Invoke codex session to confirm all plan items implemented. Check for gh CLI in PATH. Create pull request using gh CLI if everything passes. Error if gh not found or implementation incomplete.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 12,
+      "title": "Run command orchestration",
+      "description": "Implement the full workflow orchestration: spawn -> research -> plan -> validate -> implement -> review -> publish. Handle step transitions and retry logic.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 13,
+      "title": "Create config files for all steps",
+      "description": "Create markdown config files with YAML front-matter in config/ directory for each workflow step: spawn.md, research.md, plan.md, validate.md, implement.md, review.md, publish.md.",
+      "status": "done",
+      "priority": "high"
+    },
+    {
+      "id": 14,
+      "title": "Update README.md with documentation",
+      "description": "Document prerequisites (Bun, gh, claude, codex), installation instructions, build/test commands, usage examples for all CLI commands, and the git worktree structure requirements.",
+      "status": "done",
+      "priority": "normal"
+    },
+    {
+      "id": 15,
+      "title": "Add unit tests for core functionality",
+      "description": "Add unit tests for JSON payload parsing, config file loading, variable substitution, git worktree detection, and CLI argument parsing.",
+      "status": "done",
+      "priority": "normal"
+    },
+    {
+      "id": 16,
+      "title": "Add integration tests",
+      "description": "Add integration tests for the full workflow with mocked claude/codex CLI invocations.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": 17,
+      "title": "Add tests for config file loading",
+      "description": "Add unit tests for loading and parsing config files with YAML front-matter and variable substitution.",
+      "status": "todo",
+      "priority": "normal"
+    },
+    {
+      "id": 18,
+      "title": "Add end-to-end workflow test",
+      "description": "Add E2E test that simulates the full workflow with mocked external CLI tools (claude, codex, gh).",
+      "status": "todo",
+      "priority": "low"
+    }
+  ]
+}

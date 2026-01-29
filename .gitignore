@@ -137,3 +137,12 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Bun
+bun.lockb
+
+# Build output
+dist/
+
+# _thoughts workflow artifacts (generated during Ralph runs)
+_thoughts/
