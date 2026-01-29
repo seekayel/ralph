@@ -181,7 +181,7 @@
       "id": 26,
       "title": "Add detailed help text for all CLI commands",
       "description": "The spec requires 'Each CLI action should have an associated --help flag, which prints all relevant command flags and arguments that are possible.' Add comprehensive help text for each command.",
-      "status": "todo",
+      "status": "done",
       "priority": "normal"
     }
   ]
