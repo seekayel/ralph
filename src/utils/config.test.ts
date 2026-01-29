@@ -1,9 +1,14 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import {
   issueToBranchName,
   issueToTopicName,
   issueToWorktreeName,
+  loadStepConfig,
   parseIssuePayload,
+  readPayloadFromStdinOrFile,
   substituteVariables,
 } from "./config.js";
 
@@ -147,5 +152,243 @@ describe("issueToTopicName", () => {
 
   it("handles empty title", () => {
     expect(issueToTopicName("")).toBe("");
+  });
+});
+
+describe("loadStepConfig", () => {
+  let tempDir: string;
+  const testIssue = {
+    id: "TEST-123",
+    title: "Test Issue",
+    description: "Test description",
+  };
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "ralph-config-test-"));
+  });
+
+  afterEach(async () => {
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("loads config file with valid front-matter", async () => {
+    const configContent = `---
+command: claude
+args:
+  - "--headless"
+  - "--allowedTools"
+  - "Read,Grep"
+---
+
+This is the prompt body.`;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    const config = await loadStepConfig(configPath, testIssue);
+
+    expect(config.command).toBe("claude");
+    expect(config.args).toEqual(["--headless", "--allowedTools", "Read,Grep"]);
+    expect(config.prompt).toBe("This is the prompt body.");
+  });
+
+  it("substitutes variables in prompt body", async () => {
+    const configContent = `---
+command: codex
+args: []
+---
+
+Issue: \${issue.id}
+Title: \${issue.title}
+Description: \${issue.description}`;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    const config = await loadStepConfig(configPath, testIssue);
+
+    expect(config.prompt).toContain("Issue: TEST-123");
+    expect(config.prompt).toContain("Title: Test Issue");
+    expect(config.prompt).toContain("Description: Test description");
+  });
+
+  it("substitutes variables in args", async () => {
+    const configContent = `---
+command: claude
+args:
+  - "--issue"
+  - "\${issue.id}"
+---
+
+Prompt`;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    const config = await loadStepConfig(configPath, testIssue);
+
+    expect(config.args).toEqual(["--issue", "TEST-123"]);
+  });
+
+  it("throws error if config file not found", async () => {
+    const nonExistentPath = join(tempDir, "nonexistent.md");
+
+    await expect(loadStepConfig(nonExistentPath, testIssue)).rejects.toThrow(
+      "Config file not found"
+    );
+  });
+
+  it("throws error if front-matter is missing", async () => {
+    const configContent = "No front-matter here";
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    await expect(loadStepConfig(configPath, testIssue)).rejects.toThrow(
+      "Config file must have YAML front-matter"
+    );
+  });
+
+  it("throws error if command field is missing", async () => {
+    const configContent = `---
+args:
+  - "--headless"
+---
+
+Prompt`;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    await expect(loadStepConfig(configPath, testIssue)).rejects.toThrow(
+      "Config file missing required 'command' field"
+    );
+  });
+
+  it("handles config with no args", async () => {
+    const configContent = `---
+command: claude
+---
+
+Simple prompt`;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    const config = await loadStepConfig(configPath, testIssue);
+
+    expect(config.command).toBe("claude");
+    expect(config.args).toEqual([]);
+    expect(config.prompt).toBe("Simple prompt");
+  });
+
+  it("handles multiline prompt body", async () => {
+    const configContent = `---
+command: claude
+args: []
+---
+
+Line 1
+Line 2
+Line 3`;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    const config = await loadStepConfig(configPath, testIssue);
+
+    expect(config.prompt).toBe("Line 1\nLine 2\nLine 3");
+  });
+
+  it("handles empty prompt body", async () => {
+    const configContent = `---
+command: claude
+args: []
+---
+`;
+
+    const configPath = join(tempDir, "test.md");
+    await writeFile(configPath, configContent);
+
+    const config = await loadStepConfig(configPath, testIssue);
+
+    expect(config.prompt).toBe("");
+  });
+});
+
+describe("readPayloadFromStdinOrFile", () => {
+  let tempDir: string;
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "ralph-payload-test-"));
+  });
+
+  afterEach(async () => {
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("reads valid JSON payload from file", async () => {
+    const payloadContent = JSON.stringify({
+      id: "FILE-123",
+      title: "From File",
+      description: "Read from file",
+    });
+
+    const payloadPath = join(tempDir, "payload.json");
+    await writeFile(payloadPath, payloadContent);
+
+    const issue = await readPayloadFromStdinOrFile(payloadPath);
+
+    expect(issue.id).toBe("FILE-123");
+    expect(issue.title).toBe("From File");
+    expect(issue.description).toBe("Read from file");
+  });
+
+  it("throws error if input file not found", async () => {
+    const nonExistentPath = join(tempDir, "nonexistent.json");
+
+    await expect(readPayloadFromStdinOrFile(nonExistentPath)).rejects.toThrow(
+      "Input file not found"
+    );
+  });
+
+  it("throws error for invalid JSON in file", async () => {
+    const payloadPath = join(tempDir, "invalid.json");
+    await writeFile(payloadPath, "not valid json");
+
+    await expect(readPayloadFromStdinOrFile(payloadPath)).rejects.toThrow(
+      "Invalid JSON payload"
+    );
+  });
+
+  it("trims whitespace from file content", async () => {
+    const payloadContent = `
+      ${JSON.stringify({
+        id: "TRIM-123",
+        title: "Whitespace Test",
+        description: "Has whitespace",
+      })}
+    `;
+
+    const payloadPath = join(tempDir, "payload.json");
+    await writeFile(payloadPath, payloadContent);
+
+    const issue = await readPayloadFromStdinOrFile(payloadPath);
+
+    expect(issue.id).toBe("TRIM-123");
+  });
+
+  it("validates payload fields from file", async () => {
+    const payloadContent = JSON.stringify({
+      id: "TEST-123",
+      title: "Missing description",
+    });
+
+    const payloadPath = join(tempDir, "payload.json");
+    await writeFile(payloadPath, payloadContent);
+
+    await expect(readPayloadFromStdinOrFile(payloadPath)).rejects.toThrow(
+      "Issue payload must have a string 'description' field"
+    );
   });
 });

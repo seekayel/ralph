@@ -118,7 +118,7 @@
       "id": 17,
       "title": "Add tests for config file loading",
       "description": "Add unit tests for loading and parsing config files with YAML front-matter and variable substitution.",
-      "status": "todo",
+      "status": "done",
       "priority": "normal"
     },
     {
