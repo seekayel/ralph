@@ -2,8 +2,9 @@
 command: claude
 args:
   - "--print"
-  - "--allowed-tools"
-  - "Read,Grep,Glob,Bash(git status:git log:git diff:git show:git branch)"
+  - "--dangerously-skip-permissions"
+  - "--disallowed-tools"
+  - "Bash(git add:git commit:git push:git checkout:git merge:git rebase:git reset:git branch -d:git branch -D)"
 ---
 
 Use the research-plan-implement workflow defined in `.ralph/_agents/skills/research-plan-implement/skill.md` to create an implementation plan.
@@ -24,7 +25,7 @@ Use the research-plan-implement workflow defined in `.ralph/_agents/skills/resea
 ## Constraints
 
 - Only use git read commands (status, log, diff, show, branch)
-- Do not make any changes to the codebase
+- Do not modify source code files - only write to `_thoughts/` directory
 - Do not use git write commands (add, commit, push, checkout, merge)
 
 ## Success Criteria

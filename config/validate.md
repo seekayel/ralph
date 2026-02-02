@@ -2,7 +2,8 @@
 command: codex
 args:
   - "exec"
-  - "--full-auto"
+  - "--ask-for-approval"
+  - "never"
   - "--sandbox"
   - "read-only"
 ---
