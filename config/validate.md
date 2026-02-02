@@ -2,10 +2,8 @@
 command: codex
 args:
   - "exec"
-  - "--ask-for-approval"
-  - "never"
   - "--sandbox"
-  - "read-only"
+  - "workspace-write"
 ---
 
 Review and validate the implementation plan for quality and completeness.

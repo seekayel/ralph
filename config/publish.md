@@ -2,10 +2,8 @@
 command: codex
 args:
   - "exec"
-  - "--ask-for-approval"
-  - "never"
   - "--sandbox"
-  - "read-only"
+  - "workspace-write"
 ---
 
 Verify implementation completeness before creating a pull request.
