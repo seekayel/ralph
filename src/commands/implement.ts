@@ -49,7 +49,9 @@ export async function implement(
     }
 
     console.log("Starting implementation...");
-    const result = await runAgentCommand(config, context.worktreeDir);
+    const result = await runAgentCommand(config, context.worktreeDir, {
+      stepName: `implement-${context.issue.id}`,
+    });
 
     const extractedSessionId = extractSessionId(result.stdout);
     const finalSessionId = extractedSessionId || sessionId;

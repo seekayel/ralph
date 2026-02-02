@@ -71,13 +71,16 @@ async function runPlanStep(
     await syncAgentsToWorktree(context.worktreeDir);
 
     const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
-    const result = await runAgentCommand(config, context.worktreeDir);
+    const result = await runAgentCommand(config, context.worktreeDir, {
+      stepName: `plan-${context.issue.id}`,
+    });
 
     return {
       success: result.success,
       message: result.success
         ? "Plan agent completed"
         : `Plan agent failed: ${result.stderr || result.stdout}`,
+      debugArtifactDir: result.debugArtifactDir,
     };
   } catch (error) {
     return {

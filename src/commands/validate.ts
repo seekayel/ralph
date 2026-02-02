@@ -20,7 +20,9 @@ export async function validate(
     await syncAgentsToWorktree(context.worktreeDir);
 
     const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
-    const result = await runAgentCommand(config, context.worktreeDir);
+    const result = await runAgentCommand(config, context.worktreeDir, {
+      stepName: `validate-${context.issue.id}`,
+    });
 
     const needsChanges = checkIfNeedsChanges(result.stdout);
     debug(`Validation result - needsChanges: ${needsChanges}`);

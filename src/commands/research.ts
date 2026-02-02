@@ -71,13 +71,16 @@ async function runResearchStep(
     await syncAgentsToWorktree(context.worktreeDir);
 
     const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
-    const result = await runAgentCommand(config, context.worktreeDir);
+    const result = await runAgentCommand(config, context.worktreeDir, {
+      stepName: `research-${context.issue.id}`,
+    });
 
     return {
       success: result.success,
       message: result.success
         ? "Research agent completed"
         : `Research agent failed: ${result.stderr || result.stdout}`,
+      debugArtifactDir: result.debugArtifactDir,
     };
   } catch (error) {
     return {

@@ -15,7 +15,7 @@ import {
   readPayloadFromStdinOrFile,
 } from "./utils/config.js";
 import { isGitBareWorktreeRoot } from "./utils/git.js";
-import { debug, setVerbose } from "./utils/logger.js";
+import { debug, setVerbose, setDebugDir } from "./utils/logger.js";
 
 const program = new Command();
 
@@ -26,6 +26,7 @@ program
   )
   .version("0.1.0")
   .option("-v, --verbose", "Enable verbose logging for debugging")
+  .option("-d, --debug-dir <path>", "Directory to write debug artifacts (prompt, stdout, stderr, repro script)")
   .addHelpText("after", `
 Ralph automates the software development workflow using AI agents:
   - Claude Code for research, planning, and implementation
@@ -55,14 +56,41 @@ Commands:
   review     Code review with Codex
   publish    Verify and create pull request
 
+Debugging:
+  Use --verbose (-v) to see detailed execution logs including:
+    - Full command lines being executed
+    - Working directories
+    - Relevant environment variables (RALPH_*, CLAUDE_*, NODE_*)
+    - stdout/stderr content (truncated for large outputs)
+    - Execution duration
+
+  Use --debug-dir <path> to write debug artifacts for each step:
+    <path>/research-<id>-<timestamp>/
+    ├── prompt.txt       # Full prompt sent to the agent
+    ├── stdout.txt       # Complete stdout output
+    ├── stderr.txt       # Complete stderr output
+    ├── debug-info.json  # Metadata (command, args, env, timing)
+    └── repro.sh         # Executable script to reproduce the command
+
+  Examples:
+    $ ralph research -v --debug-dir ./debug-output --input issue.json
+    $ ./debug-output/research-HLN-123-2024-01-15T10-30-00-000Z/repro.sh
+
 For command-specific help, run: ralph <command> --help
 `)
   .showHelpAfterError("(run ralph --help for usage information)")
-  .hook("preAction", (thisCommand) => {
+  .hook("preAction", async (thisCommand) => {
     const opts = thisCommand.opts();
     if (opts.verbose) {
       setVerbose(true);
       debug("Verbose logging enabled");
+    }
+    if (opts.debugDir) {
+      // Ensure debug directory exists
+      const { $ } = await import("bun");
+      await $`mkdir -p ${opts.debugDir}`.quiet();
+      setDebugDir(opts.debugDir);
+      debug(`Debug artifacts will be written to: ${opts.debugDir}`);
     }
   });
 

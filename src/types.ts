@@ -24,4 +24,5 @@ export interface StepResult {
   message: string;
   outputFile?: string;
   sessionId?: string;
+  debugArtifactDir?: string;
 }

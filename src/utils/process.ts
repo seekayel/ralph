@@ -1,23 +1,48 @@
 import { spawn } from "bun";
 import type { StepConfig } from "../types.js";
-import { debug, debugObject, isVerbose } from "./logger.js";
+import {
+  debug,
+  debugObject,
+  isVerbose,
+  getFilteredEnv,
+  logCommandExecution,
+  writeDebugArtifact,
+  getDebugDir,
+  type CommandDebugInfo,
+} from "./logger.js";
 
 export interface ProcessResult {
   success: boolean;
   exitCode: number;
   stdout: string;
   stderr: string;
+  debugArtifactDir?: string;
+}
+
+export interface RunAgentOptions {
+  stepName?: string;
+  env?: Record<string, string>;
 }
 
 export async function runAgentCommand(
   config: StepConfig,
-  cwd: string
+  cwd: string,
+  options: RunAgentOptions = {}
 ): Promise<ProcessResult> {
+  const { stepName = "agent", env: extraEnv = {} } = options;
+  const startTime = Date.now();
+  const timestamp = new Date().toISOString();
+
   debug(`Executing agent command: ${config.command}`);
   debug(`Working directory: ${cwd}`);
   debugObject("Command arguments", config.args);
-  if (isVerbose()) {
-    debug(`Prompt length: ${config.prompt.length} characters`);
+
+  // Merge process env with extra env vars
+  const processEnv = { ...process.env, ...extraEnv } as Record<string, string | undefined>;
+
+  // Log environment variables being passed
+  if (isVerbose() && Object.keys(extraEnv).length > 0) {
+    debugObject("Extra environment variables", extraEnv);
   }
 
   // Pass prompt via stdin to avoid issues with special characters and long prompts
@@ -26,6 +51,7 @@ export async function runAgentCommand(
     stdin: "pipe",
     stdout: "pipe",
     stderr: "pipe",
+    env: processEnv,
   });
 
   // Write prompt to stdin and close it (Bun's FileSink API)
@@ -36,12 +62,47 @@ export async function runAgentCommand(
   const stderr = await new Response(proc.stderr).text();
   const exitCode = await proc.exited;
 
-  debug(`Command exited with code: ${exitCode}`);
-  if (isVerbose() && stdout) {
-    debug(`stdout length: ${stdout.length} characters`);
+  const durationMs = Date.now() - startTime;
+
+  // Build debug info structure
+  const debugInfo: CommandDebugInfo = {
+    timestamp,
+    command: config.command,
+    args: config.args,
+    cwd,
+    env: getFilteredEnv(processEnv),
+    promptLength: config.prompt.length,
+    exitCode,
+    stdout,
+    stderr,
+    durationMs,
+  };
+
+  // Log detailed execution info
+  logCommandExecution(debugInfo);
+
+  // Write debug artifacts if debug dir is configured
+  let debugArtifactDir: string | undefined;
+  if (getDebugDir()) {
+    const artifactDir = await writeDebugArtifact(stepName, debugInfo, config.prompt);
+    if (artifactDir) {
+      debugArtifactDir = artifactDir;
+      console.log(`[DEBUG] Debug artifacts written to: ${artifactDir}`);
+      console.log(`[DEBUG] To reproduce: ${artifactDir}/repro.sh`);
+    }
   }
-  if (isVerbose() && stderr) {
-    debug(`stderr length: ${stderr.length} characters`);
+
+  // Log error info prominently if command failed
+  if (exitCode !== 0) {
+    console.error(`\n[ERROR] Command failed with exit code ${exitCode}`);
+    console.error(`[ERROR] Command: ${config.command} ${config.args.join(" ")}`);
+    console.error(`[ERROR] Working directory: ${cwd}`);
+    if (stderr) {
+      console.error(`[ERROR] stderr:\n${stderr.slice(0, 2000)}${stderr.length > 2000 ? "\n... (truncated)" : ""}`);
+    }
+    if (debugArtifactDir) {
+      console.error(`[ERROR] Full debug info available at: ${debugArtifactDir}`);
+    }
   }
 
   return {
@@ -49,6 +110,7 @@ export async function runAgentCommand(
     exitCode,
     stdout,
     stderr,
+    debugArtifactDir,
   };
 }
 

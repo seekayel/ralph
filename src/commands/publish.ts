@@ -29,7 +29,9 @@ export async function publish(
     await syncAgentsToWorktree(context.worktreeDir);
 
     const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
-    const result = await runAgentCommand(config, context.worktreeDir);
+    const result = await runAgentCommand(config, context.worktreeDir, {
+      stepName: `publish-${context.issue.id}`,
+    });
 
     if (!result.success) {
       debug(`Publish verification failed: ${result.stderr || result.stdout}`);

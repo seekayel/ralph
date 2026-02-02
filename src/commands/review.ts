@@ -35,7 +35,9 @@ export async function review(
     await syncAgentsToWorktree(context.worktreeDir);
 
     const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
-    const result = await runAgentCommand(config, context.worktreeDir);
+    const result = await runAgentCommand(config, context.worktreeDir, {
+      stepName: `review-${context.issue.id}`,
+    });
 
     const feedbackFile = await checkReviewFileExists(
       context.worktreeDir,
