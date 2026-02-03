@@ -15,7 +15,7 @@ import {
   readPayloadFromStdinOrFile,
 } from "./utils/config.js";
 import { isGitBareWorktreeRoot } from "./utils/git.js";
-import { debug, setVerbose, setDebugDir } from "./utils/logger.js";
+import { debug, setVerbose, setDebugDir, setDryRun } from "./utils/logger.js";
 
 const program = new Command();
 
@@ -27,6 +27,7 @@ program
   .version("0.1.0")
   .option("-v, --verbose", "Enable verbose logging for debugging")
   .option("-d, --debug-dir <path>", "Directory to write debug artifacts (prompt, stdout, stderr, repro script)")
+  .option("-n, --dry-run", "Print the command that would be executed without running it")
   .addHelpText("after", `
 Ralph automates the software development workflow using AI agents:
   - Claude Code for research, planning, and implementation
@@ -64,6 +65,10 @@ Debugging:
     - stdout/stderr content (truncated for large outputs)
     - Execution duration
 
+  Use --dry-run (-n) to print the exact command that would be executed
+  without actually running it. The output is formatted as a copy-pastable
+  shell command that you can run manually in the terminal.
+
   Use --debug-dir <path> to write debug artifacts for each step:
     <path>/research-<id>-<timestamp>/
     ├── prompt.txt       # Full prompt sent to the agent
@@ -73,6 +78,7 @@ Debugging:
     └── repro.sh         # Executable script to reproduce the command
 
   Examples:
+    $ ralph research -n --input issue.json        # dry-run to see command
     $ ralph research -v --debug-dir ./debug-output --input issue.json
     $ ./debug-output/research-HLN-123-2024-01-15T10-30-00-000Z/repro.sh
 
@@ -91,6 +97,10 @@ For command-specific help, run: ralph <command> --help
       await $`mkdir -p ${opts.debugDir}`.quiet();
       setDebugDir(opts.debugDir);
       debug(`Debug artifacts will be written to: ${opts.debugDir}`);
+    }
+    if (opts.dryRun) {
+      setDryRun(true);
+      debug("Dry-run mode enabled");
     }
   });
 

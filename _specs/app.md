@@ -143,6 +143,42 @@ The JSON payload passed to Ralph must contain the following fields:
 
 The cli takes a JSON payload either via standard input or from a file via a command-line flag and argument. The command used to invoke each action (the agent, the flags and prompt file) should all be stored in config files that the core code runs. We expect that which agent is run on which step will change in the future.
 
+## Global Flags
+
+The following flags are available for all commands:
+
+| Flag | Short | Description |
+|------|-------|-------------|
+| `--verbose` | `-v` | Enable verbose logging for debugging |
+| `--debug-dir <path>` | `-d` | Directory to write debug artifacts (prompt, stdout, stderr, repro script) |
+| `--dry-run` | `-n` | Print the exact command that would be executed without running it |
+
+**Dry Run Mode:**
+The `--dry-run` flag prints a copy-pastable shell command to the console instead of executing it. This is useful for:
+- Debugging the command that Ralph would execute
+- Manually running the command in a terminal with modifications
+- Understanding what agent invocation looks like for a given step
+
+The output includes:
+- The working directory (`cd` command)
+- The full command with all arguments
+- The complete prompt passed via stdin (using a heredoc)
+
+**Example:**
+```bash
+$ ralph research --dry-run --input issue.json
+
+# DRY RUN - Command that would be executed:
+# ─────────────────────────────────────────────────────
+# Working directory: /path/to/ralph-git/hln-123
+cd "/path/to/ralph-git/hln-123"
+
+# Command (prompt passed via stdin, 1234 chars):
+cat <<'RALPH_PROMPT_EOF' | claude --print --dangerously-skip-permissions ...
+[prompt content here]
+RALPH_PROMPT_EOF
+# ─────────────────────────────────────────────────────
+```
 
 ## Run
 The Run action takes a JSON payload either via standard input or from a file via a command-line flag and argument. It then implements the full Ralph CLI workflow using that JSON payload.

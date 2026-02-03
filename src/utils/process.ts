@@ -4,10 +4,12 @@ import {
   debug,
   debugObject,
   isVerbose,
+  isDryRun,
   getFilteredEnv,
   logCommandExecution,
   writeDebugArtifact,
   getDebugDir,
+  formatDryRunCommand,
   type CommandDebugInfo,
 } from "./logger.js";
 
@@ -43,6 +45,22 @@ export async function runAgentCommand(
   // Log environment variables being passed
   if (isVerbose() && Object.keys(extraEnv).length > 0) {
     debugObject("Extra environment variables", extraEnv);
+  }
+
+  // Dry-run mode: print the command and return without executing
+  if (isDryRun()) {
+    const dryRunOutput = formatDryRunCommand(config.command, config.args, cwd, config.prompt);
+    console.log("\n# DRY RUN - Command that would be executed:");
+    console.log("# ─────────────────────────────────────────────────────");
+    console.log(dryRunOutput);
+    console.log("# ─────────────────────────────────────────────────────\n");
+
+    return {
+      success: true,
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+    };
   }
 
   // Pass prompt via stdin to avoid issues with special characters and long prompts

@@ -1,5 +1,6 @@
 let verboseEnabled = false;
 let debugDir: string | null = null;
+let dryRunEnabled = false;
 
 export function setVerbose(enabled: boolean): void {
   verboseEnabled = enabled;
@@ -15,6 +16,14 @@ export function setDebugDir(dir: string): void {
 
 export function getDebugDir(): string | null {
   return debugDir;
+}
+
+export function setDryRun(enabled: boolean): void {
+  dryRunEnabled = enabled;
+}
+
+export function isDryRun(): boolean {
+  return dryRunEnabled;
 }
 
 export function debug(message: string, ...args: unknown[]): void {
@@ -74,6 +83,28 @@ export interface CommandDebugInfo {
   stdout: string;
   stderr: string;
   durationMs: number;
+}
+
+export function formatDryRunCommand(command: string, args: string[], cwd: string, prompt: string): string {
+  const lines: string[] = [];
+
+  // Format the command with proper quoting
+  const quotedArgs = args.map((arg) => {
+    if (/[\s"'$`\\]/.test(arg)) {
+      return `"${arg.replace(/"/g, '\\"')}"`;
+    }
+    return arg;
+  });
+
+  lines.push(`# Working directory: ${cwd}`);
+  lines.push(`cd "${cwd}"`);
+  lines.push("");
+  lines.push(`# Command (prompt passed via stdin, ${prompt.length} chars):`);
+  lines.push(`cat <<'RALPH_PROMPT_EOF' | ${command} ${quotedArgs.join(" ")}`);
+  lines.push(prompt);
+  lines.push("RALPH_PROMPT_EOF");
+
+  return lines.join("\n");
 }
 
 export function formatReproCommand(info: CommandDebugInfo): string {
