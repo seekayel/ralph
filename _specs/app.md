@@ -7,7 +7,7 @@ The README.md must document the following required dependencies:
 - **Bun** (v1.3.6 or higher) - Runtime and build tool
 - **gh** - GitHub CLI for creating pull requests in the Publish step
 - **claude** - Claude Code CLI for AI-assisted coding sessions
-- **codex** - Codex CLI for validation and review sessions
+- **codex** - Codex CLI for planning, validation, review, and publish sessions
 
 # General Guidance
 
@@ -26,7 +26,7 @@ The Ralph CLI bundles its configuration files and agent definitions into the com
 
 **Runtime Extraction:**
 - When Ralph runs a workflow step, it extracts the bundled `_agents/` to the git repo's `.ralph/` directory
-- The path becomes: `$GIT_DIR/.ralph/_agents/`
+- The path becomes: `$REPO_ROOT/.ralph/_agents/` (where `.ralph/` is a sibling of `.git/`)
 - A hash file (`.ralph/.assets-hash`) tracks whether extraction is needed
 - Config files are loaded directly from embedded assets (no extraction needed)
 
@@ -51,7 +51,7 @@ git-dir/
 ```
 
 **Skill Path References:**
-Config files reference skills using the `.ralph/` prefix path, which resolves to the git directory:
+Config files reference skills using the `.ralph/` prefix path, which resolves to the repository root:
 ```
 Use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md`
 ```
@@ -60,7 +60,7 @@ Use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan
 
 Ralph uses two AI agents for different workflow steps by default:
 
-- **Claude Code** (`claude`) - Used for Research, Implement, and Review steps
+- **Claude Code** (`claude`) - Used for Research and Implement steps
 - **Codex** (`codex`) - Used for Plan, Validate, Review, and Publish steps
 
 Invoke each agent using its respective CLI command. Refer to `claude --help` and `codex --help` for available command flags and options. Ralph should invoke these commands as subprocesses and wait until the process returns before proceeding to the next step. Each step should allow for overriding the used coding agent.
@@ -89,18 +89,18 @@ args:
 
 This is the prompt that will be sent to the model with ${variable} substitution.
 
-Issue: ${issue.id}
-Title: ${issue.title}
-Description: ${issue.description}
+Issue: ${id}
+Title: ${title}
+Description: ${description}
 
 Use the skill in `.ralph/_agents/skills/research-plan-implement/skill.md`
 ```
 
 **Variable Substitution:**
-Both the front-matter and body of the config file should be processed with `${}` variable substitution before execution. Available variables include the JSON payload fields (e.g., `${issue.id}`, `${issue.title}`, `${issue.description}`).
+Both the front-matter and body of the config file should be processed with `${}` variable substitution before execution. Available variables are the JSON payload fields: `${id}`, `${title}`, and `${description}`.
 
 **Skill Path Validation:**
-Before running an agent, the CLI validates that all skill paths referenced in the prompt (matching pattern `.ralph/_agents/skills/*.md`) exist in the worktree's `.ralph/` directory.
+Before running an agent, the CLI validates that all skill paths referenced in the prompt (matching pattern `.ralph/_agents/skills/*/skill.md`) exist in the worktree's `.ralph/` directory.
 
 # File Naming Convention
 
@@ -191,10 +191,10 @@ Only proceed if the claude code session successfully generates a research report
 ## Plan
 
 **Action**
-Invoke a claude code session headless with a prompt to use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md` to plan an implementation and testing plan for the the code base in relation to the requested issue using the `_thoughts/research/NNN_topic_name.md` research. Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc).
+Invoke a codex session headless with a prompt to use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md` to plan an implementation and testing plan for the the code base in relation to the requested issue using the `_thoughts/research/NNN_topic_name.md` research. Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc).
 
 **Success Criteria**
-Only proceed if the claude code session successfully generates a `_thoughts/plan/NNN_topic_name.md` file. Otherwise retry once, if fails a second time then print error message and exit with a failure.
+Only proceed if the codex session successfully generates a `_thoughts/plan/NNN_topic_name.md` file. Otherwise retry once, if fails a second time then print error message and exit with a failure.
 
 
 ## Validate
@@ -235,5 +235,3 @@ Invoke a codex session headless with a prompt to confirm that the changes on the
 If the `gh` CLI is not found in the system PATH, print an error message instructing the user to install the GitHub CLI (e.g., "Error: GitHub CLI (gh) is required but not found. Please install it: https://cli.github.com/") and exit with a failure code.
 
 If everything was implemented then use the `gh` CLI tool to create a pull request from the local branch. Otherwise print error message and exit.
-
-
