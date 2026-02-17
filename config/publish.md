@@ -16,7 +16,7 @@ Verify implementation completeness before creating a pull request.
 
 ## Instructions
 
-1. Read the implementation plan from `_thoughts/plan/${id}_*.md`
+1. Read the implementation plan from `_thoughts/plan/NNN_topic_name.md`
 2. Verify all plan items have been implemented
 3. Confirm all tests were written and are passing
 4. Check that no items are left incomplete

@@ -16,7 +16,7 @@ Review and validate the implementation plan for quality and completeness.
 
 ## Instructions
 
-1. Read the plan from `_thoughts/plan/${id}_*.md`
+1. Read the plan from `_thoughts/plan/NNN_topic_name.md`
 2. Verify the plan will implement the feature described in the issue
 3. Check that the testing strategy will adequately verify the implementation
 4. Assess if success criteria are clear and testable

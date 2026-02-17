@@ -15,12 +15,12 @@ Use the research-plan-implement workflow defined in `.ralph/_agents/skills/resea
 
 ## Instructions
 
-1. Read the implementation plan from `_thoughts/plan/${id}_*.md`
+1. Read the implementation plan from `_thoughts/plan/NNN_topic_name.md`
 2. Implement each phase of the plan in order
 3. Run lint, build, and test at consistent intervals
 4. Add tests as specified in the testing strategy
 5. Commit changes incrementally after each logical unit of work
-6. Track progress in `_thoughts/implement/${id}_<topic_name>.md`
+6. Track progress in `_thoughts/implement/NNN_topic_name.md`
 
 ## Implementation Rules
 

@@ -226,8 +226,8 @@ Behavior:
   4. Retries once on failure before exiting with error
 
 Output:
-  Creates file: _thoughts/research/<issue-id>_<topic-name>.md
-  Example: _thoughts/research/HLN-123_add_feature.md
+  Creates file: _thoughts/research/NNN_topic_name.md
+  Example: _thoughts/research/001_add_feature.md
 
 Configuration:
   Uses config/research.md for agent configuration
@@ -282,8 +282,8 @@ Behavior:
   4. Retries once on failure before exiting with error
 
 Output:
-  Creates file: _thoughts/plan/<issue-id>_<topic-name>.md
-  Example: _thoughts/plan/HLN-123_add_feature.md
+  Creates file: _thoughts/plan/NNN_topic_name.md
+  Example: _thoughts/plan/001_add_feature.md
 
 Configuration:
   Uses config/plan.md for agent configuration
@@ -382,7 +382,7 @@ program
 Examples:
   $ echo '{"id": "HLN-123", "title": "Add feature", "description": "..."}' | ralph implement
   $ ralph implement --input issue.json
-  $ ralph implement -i issue.json --feedback _thoughts/code-review/HLN-123_add_feature.md
+  $ ralph implement -i issue.json --feedback _thoughts/code-review/001_add_feature.md
   $ ralph implement -v --input issue.json    # with verbose logging
 
 Prerequisites:
@@ -460,8 +460,8 @@ Behavior:
   5. In 'run' mode, returns to implement step if changes needed (max 4 attempts)
 
 Output:
-  Creates file: _thoughts/code-review/<issue-id>_<topic-name>.md
-  Example: _thoughts/code-review/HLN-123_add_feature.md
+  Creates file: _thoughts/code-review/NNN_topic_name.md
+  Example: _thoughts/code-review/001_add_feature.md
 
 Exit Codes:
   0 - Code meets quality bar

@@ -384,6 +384,16 @@ describe("loadStepConfig", () => {
     expect(config.args).toEqual(["exec", "--sandbox", "workspace-write"]);
   });
 
+  it("uses NNN_topic_name.md workflow artifact naming in prompts", async () => {
+    const researchConfig = await loadStepConfig("config/research.md", testIssue);
+    const planConfig = await loadStepConfig("config/plan.md", testIssue);
+    const reviewConfig = await loadStepConfig("config/review.md", testIssue);
+
+    expect(researchConfig.prompt).toContain("_thoughts/research/NNN_topic_name.md");
+    expect(planConfig.prompt).toContain("_thoughts/plan/NNN_topic_name.md");
+    expect(reviewConfig.prompt).toContain("_thoughts/code-review/NNN_topic_name.md");
+  });
+
   it("substitutes variables in prompt body", async () => {
     // Use actual embedded config that contains variables
     const config = await loadStepConfig("config/research.md", testIssue);

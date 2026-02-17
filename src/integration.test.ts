@@ -169,7 +169,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         worktreeDir,
         "_thoughts",
         "research",
-        "TEST-123_test_feature.md"
+        "001_test_feature.md"
       );
       await writeFile(researchFile, "# Research findings\n\nSome research...");
 
@@ -177,7 +177,7 @@ Confirm implementation is complete for issue \${issue.id}`;
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Research completed successfully");
-      expect(result.outputFile).toContain("TEST-123");
+      expect(result.outputFile).toContain("001_test_feature.md");
       expect(mockRunAgentCommand).toHaveBeenCalled();
     });
 
@@ -218,7 +218,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         worktreeDir,
         "_thoughts",
         "research",
-        "TEST-123_test_feature.md"
+        "001_test_feature.md"
       );
       await writeFile(researchFile, "# Research findings");
 
@@ -243,7 +243,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         worktreeDir,
         "_thoughts",
         "plan",
-        "TEST-123_test_feature.md"
+        "001_test_feature.md"
       );
       await writeFile(planFile, "# Implementation Plan\n\n1. Step one...");
 
@@ -251,7 +251,7 @@ Confirm implementation is complete for issue \${issue.id}`;
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Plan completed successfully");
-      expect(result.outputFile).toContain("TEST-123");
+      expect(result.outputFile).toContain("001_test_feature.md");
     });
 
     it("fails after retries when plan file is not created", async () => {
@@ -412,7 +412,7 @@ Confirm implementation is complete for issue \${issue.id}`;
         worktreeDir,
         "_thoughts",
         "code-review",
-        "TEST-123_test_feature.md"
+        "001_test_feature.md"
       );
       await writeFile(
         reviewFile,
@@ -423,7 +423,7 @@ Confirm implementation is complete for issue \${issue.id}`;
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(true);
-      expect(result.feedbackFile).toContain("TEST-123");
+      expect(result.feedbackFile).toContain("001_test_feature.md");
     });
   });
 

@@ -1,6 +1,7 @@
-import { Glob, $ } from "bun";
+import { $ } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
-import { issueToTopicName, loadStepConfig } from "../utils/config.js";
+import { loadStepConfig } from "../utils/config.js";
+import { findWorkflowArtifact } from "../utils/artifacts.js";
 import { debug } from "../utils/logger.js";
 import { syncAgentsToWorktree } from "../utils/paths.js";
 import { runAgentCommand } from "../utils/process.js";
@@ -21,8 +22,7 @@ export interface ReviewResult extends StepResult {
 export async function review(
   context: WorkflowContext
 ): Promise<ReviewResult> {
-  const topicName = issueToTopicName(context.issue.title);
-  const expectedFile = `_thoughts/code-review/${context.issue.id}_${topicName}.md`;
+  const expectedFile = "_thoughts/code-review/NNN_topic_name.md";
 
   debug(`Review step starting for issue: ${context.issue.id}`);
   debug(`Expected feedback file: ${expectedFile}`);
@@ -34,14 +34,17 @@ export async function review(
     // Sync agents to worktree before invoking Codex
     await syncAgentsToWorktree(context.worktreeDir);
 
-    const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
+    const config = await loadStepConfig(
+      CONFIG_PATH,
+      context.issue,
+      context.worktreeDir
+    );
     const result = await runAgentCommand(config, context.worktreeDir, {
       stepName: `review-${context.issue.id}`,
     });
 
     const feedbackFile = await checkReviewFileExists(
-      context.worktreeDir,
-      context.issue.id
+      context.worktreeDir
     );
     debug(`Feedback file found: ${feedbackFile || "none"}`);
 
@@ -88,17 +91,9 @@ export async function review(
 }
 
 async function checkReviewFileExists(
-  worktreeDir: string,
-  issueId: string
+  worktreeDir: string
 ): Promise<string | null> {
-  const reviewDir = `${worktreeDir}/_thoughts/code-review`;
-  const glob = new Glob(`${issueId}_*.md`);
-
-  for await (const file of glob.scan(reviewDir)) {
-    return `${reviewDir}/${file}`;
-  }
-
-  return null;
+  return findWorkflowArtifact(worktreeDir, "code-review");
 }
 
 async function checkIfNeedsCodeChanges(

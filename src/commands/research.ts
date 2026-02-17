@@ -1,6 +1,7 @@
-import { Glob, $ } from "bun";
+import { $ } from "bun";
 import type { StepResult, WorkflowContext } from "../types.js";
-import { issueToTopicName, loadStepConfig } from "../utils/config.js";
+import { loadStepConfig } from "../utils/config.js";
+import { findWorkflowArtifact } from "../utils/artifacts.js";
 import { debug } from "../utils/logger.js";
 import { syncAgentsToWorktree } from "../utils/paths.js";
 import { runAgentCommand } from "../utils/process.js";
@@ -17,8 +18,7 @@ async function ensureThoughtsDir(worktreeDir: string, subdir: string): Promise<v
 export async function research(
   context: WorkflowContext
 ): Promise<StepResult> {
-  const topicName = issueToTopicName(context.issue.title);
-  const expectedFile = `_thoughts/research/${context.issue.id}_${topicName}.md`;
+  const expectedFile = "_thoughts/research/NNN_topic_name.md";
 
   debug(`Research step starting for issue: ${context.issue.id}`);
   debug(`Expected output file: ${expectedFile}`);
@@ -36,10 +36,7 @@ export async function research(
 
     if (result.success) {
       debug("Research step succeeded, checking for output file");
-      const fileExists = await checkResearchFileExists(
-        context.worktreeDir,
-        context.issue.id
-      );
+      const fileExists = await checkResearchFileExists(context.worktreeDir);
       if (fileExists) {
         debug(`Research output file found: ${fileExists}`);
         return {
@@ -70,7 +67,11 @@ async function runResearchStep(
     // Sync agents to worktree before invoking Claude
     await syncAgentsToWorktree(context.worktreeDir);
 
-    const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
+    const config = await loadStepConfig(
+      CONFIG_PATH,
+      context.issue,
+      context.worktreeDir
+    );
     const result = await runAgentCommand(config, context.worktreeDir, {
       stepName: `research-${context.issue.id}`,
     });
@@ -91,15 +92,7 @@ async function runResearchStep(
 }
 
 async function checkResearchFileExists(
-  worktreeDir: string,
-  issueId: string
+  worktreeDir: string
 ): Promise<string | null> {
-  const researchDir = `${worktreeDir}/_thoughts/research`;
-  const glob = new Glob(`${issueId}_*.md`);
-
-  for await (const file of glob.scan(researchDir)) {
-    return `${researchDir}/${file}`;
-  }
-
-  return null;
+  return findWorkflowArtifact(worktreeDir, "research");
 }

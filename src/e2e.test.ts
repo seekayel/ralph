@@ -179,7 +179,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         worktreeDir,
         "_thoughts",
         "research",
-        "E2E-001_end_to_end_test_feature.md"
+        "001_end_to_end_test_feature.md"
       );
       await writeFile(researchFile, "# Research Findings\n\nCompleted research.");
 
@@ -187,7 +187,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Research completed successfully");
-      expect(result.outputFile).toContain("E2E-001");
+      expect(result.outputFile).toContain("001_end_to_end_test_feature.md");
     });
 
     it("retries and fails when research file is not created", async () => {
@@ -225,7 +225,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         worktreeDir,
         "_thoughts",
         "research",
-        "E2E-001_end_to_end_test_feature.md"
+        "001_end_to_end_test_feature.md"
       );
       await writeFile(researchFile, "# Research");
 
@@ -250,7 +250,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         worktreeDir,
         "_thoughts",
         "plan",
-        "E2E-001_end_to_end_test_feature.md"
+        "001_end_to_end_test_feature.md"
       );
       await writeFile(planFile, "# Implementation Plan\n\n1. Step one");
 
@@ -258,7 +258,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("Plan completed successfully");
-      expect(result.outputFile).toContain("E2E-001");
+      expect(result.outputFile).toContain("001_end_to_end_test_feature.md");
     });
 
     it("retries and fails when plan file is not created", async () => {
@@ -471,7 +471,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
         worktreeDir,
         "_thoughts",
         "code-review",
-        "E2E-001_end_to_end_test_feature.md"
+        "001_end_to_end_test_feature.md"
       );
       await writeFile(
         reviewFile,
@@ -482,7 +482,7 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
 
       expect(result.success).toBe(true);
       expect(result.needsChanges).toBe(true);
-      expect(result.feedbackFile).toContain("E2E-001");
+      expect(result.feedbackFile).toContain("001_end_to_end_test_feature.md");
     });
 
     it("fails when agent command fails", async () => {
@@ -601,7 +601,7 @@ Test prompt for \${issue.id}`;
 
     // Create plan file
     await writeFile(
-      join(worktreeDir, "_thoughts", "plan", "E2E-002_retry_logic_test.md"),
+      join(worktreeDir, "_thoughts", "plan", "001_retry_logic_test.md"),
       "# Plan"
     );
 
@@ -676,7 +676,7 @@ Test prompt for \${issue.id}`;
     });
 
     await writeFile(
-      join(worktreeDir, "_thoughts", "plan", "E2E-002_retry_logic_test.md"),
+      join(worktreeDir, "_thoughts", "plan", "001_retry_logic_test.md"),
       "# Plan"
     );
 

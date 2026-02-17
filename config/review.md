@@ -21,7 +21,7 @@ Use the code-review skill defined in `.ralph/_agents/skills/code-review/skill.md
 2. Check code quality and best practices
 3. Identify potential bugs or security concerns
 4. Verify the implementation matches the plan
-5. Write review findings to `_thoughts/code-review/${id}_<topic_name>.md`
+5. Write review findings to `_thoughts/code-review/NNN_topic_name.md`
 
 ## Review Criteria
 
@@ -45,4 +45,4 @@ Respond with one of:
 - "Code meets quality bar" - if all criteria are satisfied
 - "Code needs changes: [specific issues]" - if improvements are required
 
-Write detailed feedback to `_thoughts/code-review/${id}_<topic_name>.md`
+Write detailed feedback to `_thoughts/code-review/NNN_topic_name.md`
