@@ -1,4 +1,5 @@
 import type { Issue, StepResult, WorkflowContext } from "../types.js";
+import { issueToBranchName, issueToWorktreeName } from "../utils/config.js";
 import { acquireLock, releaseLock } from "../utils/lock.js";
 import { debug, debugObject } from "../utils/logger.js";
 import { implement } from "./implement.js";
@@ -6,7 +7,6 @@ import { plan } from "./plan.js";
 import { publish } from "./publish.js";
 import { research } from "./research.js";
 import { getReviewFeedback, review } from "./review.js";
-import { spawn } from "./spawn.js";
 import { validate } from "./validate.js";
 
 const MAX_VALIDATION_ATTEMPTS = 4;
@@ -47,14 +47,14 @@ async function runWorkflow(
 ): Promise<StepResult> {
   console.log(`\n=== Starting Ralph workflow for ${issue.id} ===\n`);
 
-  const spawnResult = await spawn(rootDir, issue);
-  if (!spawnResult.success || !spawnResult.context) {
-    console.error(`Spawn failed: ${spawnResult.message}`);
-    return spawnResult;
-  }
-  console.log(`✓ Spawn: ${spawnResult.message}\n`);
-
-  const context = spawnResult.context;
+  const worktreeName = issueToWorktreeName(issue.id);
+  const context: WorkflowContext = {
+    issue,
+    worktreeDir: `${rootDir}/${worktreeName}`,
+    branchName: issueToBranchName(issue.id),
+    planValidationAttempts: 0,
+    codeReviewAttempts: 0,
+  };
 
   const researchResult = await research(context);
   if (!researchResult.success) {

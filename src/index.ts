@@ -43,7 +43,7 @@ Directory Structure:
   Ralph must be run from inside a git repository.
 
 Commands:
-  run        Full workflow: spawn -> research -> plan -> validate -> implement -> review -> publish
+  run        Full workflow: research -> plan -> validate -> implement -> review -> publish
   spawn      Create git worktree and branch, run install/build/test
   research   Analyze codebase with Claude Code
   plan       Create implementation plan with Claude Code
@@ -119,7 +119,7 @@ async function validateEnvironment(): Promise<string> {
 
 program
   .command("run")
-  .description("Run the full Ralph workflow (spawn -> research -> plan -> validate -> implement -> review -> publish)")
+  .description("Run the full Ralph workflow (research -> plan -> validate -> implement -> review -> publish)")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
   .addHelpText("after", `
 Examples:
@@ -128,13 +128,12 @@ Examples:
   $ ralph run -v --input issue.json    # with verbose logging
 
 Workflow Steps:
-  1. spawn      - Create git worktree and branch, run install/build/test
-  2. research   - Analyze codebase using Claude Code (outputs _thoughts/research/)
-  3. plan       - Create implementation plan using Claude Code (outputs _thoughts/plan/)
-  4. validate   - Validate plan using Codex (retries up to 4 times)
-  5. implement  - Implement the plan using Claude Code
-  6. review     - Code review using Codex (retries up to 4 times)
-  7. publish    - Verify completion and create pull request
+  1. research   - Analyze codebase using Claude Code (outputs _thoughts/research/)
+  2. plan       - Create implementation plan using Claude Code (outputs _thoughts/plan/)
+  3. validate   - Validate plan using Codex (retries up to 4 times)
+  4. implement  - Implement the plan using Claude Code
+  5. review     - Code review using Codex (retries up to 4 times)
+  6. publish    - Verify completion and create pull request
 
 JSON Payload Schema:
   {
