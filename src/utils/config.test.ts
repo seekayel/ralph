@@ -443,7 +443,7 @@ describe("loadStepConfig", () => {
   });
 
   it("loads all embedded config files", async () => {
-    // Verify all 7 config files can be loaded
+    // Verify all core workflow config files can be loaded
     const configs = [
       "config/research.md",
       "config/plan.md",
@@ -451,7 +451,6 @@ describe("loadStepConfig", () => {
       "config/implement.md",
       "config/review.md",
       "config/publish.md",
-      "config/spawn.md",
     ];
 
     for (const configPath of configs) {

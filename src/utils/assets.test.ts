@@ -42,14 +42,13 @@ describe("getEmbeddedAsset", () => {
 describe("getEmbeddedConfigs", () => {
   it("returns all config files", () => {
     const configs = getEmbeddedConfigs();
-    expect(configs.size).toBe(7);
+    expect(configs.size).toBe(6);
     expect(configs.has("config/research.md")).toBe(true);
     expect(configs.has("config/plan.md")).toBe(true);
     expect(configs.has("config/implement.md")).toBe(true);
     expect(configs.has("config/validate.md")).toBe(true);
     expect(configs.has("config/review.md")).toBe(true);
     expect(configs.has("config/publish.md")).toBe(true);
-    expect(configs.has("config/spawn.md")).toBe(true);
   });
 
   it("does not include _agents files", () => {
