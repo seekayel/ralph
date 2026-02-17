@@ -1,214 +1,88 @@
 {
   "project": "ralph",
-  "description": "CLI tool for AI-assisted development workflow using Claude Code and Codex for research, planning, implementation, and code review. https://github.com/seekayel/ralph-git",
+  "description": "Spec conformance gap list derived from _specs/app.md audit. Prioritized changes needed to make code match the described application behavior.",
   "issues": [
     {
       "id": 1,
-      "title": "Project setup",
-      "description": "Initialize the Bun project with TypeScript, package.json, tsconfig.json, .gitignore updates, and basic project structure. Set up build and test scripts.",
-      "status": "done",
+      "title": "Allow Ralph to run from any Git repository",
+      "description": "Replace the current bare-worktree-root requirement with validation that Ralph is invoked inside a Git repository, and print a clear error if not.",
+      "status": "todo",
       "priority": "critical"
     },
     {
       "id": 2,
-      "title": "CLI entry point and argument parsing",
-      "description": "Create the main CLI entry point with subcommand routing (run, spawn, research, plan, validate, implement, review, publish). Implement --help flags for all commands. Accept JSON payload via stdin or --input flag.",
-      "status": "done",
+      "title": "Align run workflow to spec-defined step order",
+      "description": "Remove spawn from the required `run` workflow (or make it optional) so `run` executes the spec sequence: research, plan, validate, implement, review, publish.",
+      "status": "todo",
       "priority": "critical"
     },
     {
       "id": 3,
-      "title": "Git worktree detection and validation",
-      "description": "Implement detection of git bare worktree root directory structure. Error if not in a valid ralph-git directory structure with .bare/ and worktree subdirectories.",
-      "status": "done",
+      "title": "Fix single-step command execution context",
+      "description": "Update standalone command context resolution so `ralph research|plan|validate|implement|review|publish` runs against the current repository context instead of forcing `${root}/${issueId}` worktree paths.",
+      "status": "todo",
       "priority": "critical"
     },
     {
       "id": 4,
-      "title": "Configuration file system",
-      "description": "Implement config file loading from config/ directory. Support markdown format with YAML front-matter. Implement ${variable} substitution for issue.id, issue.title, issue.description.",
-      "status": "done",
+      "title": "Switch Plan default agent from Claude to Codex",
+      "description": "Update default plan-step config and help text so the Plan phase runs with Codex by default, matching the application spec.",
+      "status": "todo",
       "priority": "critical"
     },
     {
       "id": 5,
-      "title": "Spawn step implementation",
-      "description": "Create new git worktree and branch based on issue ID (e.g., HLN-14 becomes ralph-HLN-14). Read README.md for install/build/test commands and run them. Exit with error if tests fail.",
-      "status": "done",
-      "priority": "high"
+      "title": "Implement spec-compliant config variable substitution",
+      "description": "Support `${id}`, `${title}`, and `${description}` substitutions and apply substitution to both YAML front-matter and prompt body before execution.",
+      "status": "todo",
+      "priority": "critical"
     },
     {
       "id": 6,
-      "title": "Research step implementation",
-      "description": "Invoke claude code session headless with research-plan-implement workflow prompt. Allow git read commands only. Verify _thoughts/research/NNN_topic_name.md file is created. Retry once on failure.",
-      "status": "done",
-      "priority": "high"
+      "title": "Adopt NNN_topic_name.md workflow artifact naming",
+      "description": "Align research/plan/review/implement artifact naming and validation with the RPI convention (`NNN_topic_name.md`) instead of issue-id-prefixed filenames.",
+      "status": "todo",
+      "priority": "critical"
     },
     {
       "id": 7,
-      "title": "Plan step implementation",
-      "description": "Invoke claude code session headless with plan prompt using research findings. Allow git read commands only. Verify _thoughts/plan/NNN_topic_name.md file is created. Retry once on failure.",
-      "status": "done",
+      "title": "Add per-step coding-agent override support",
+      "description": "Allow each workflow step to override which coding agent command is used at runtime, as required by the spec.",
+      "status": "todo",
       "priority": "high"
     },
     {
       "id": 8,
-      "title": "Validate step implementation",
-      "description": "Invoke codex session headless to validate the plan meets quality bar. Output validation result. If changes needed in run mode, go back to Plan step. Exit after 4 failed validations.",
-      "status": "done",
+      "title": "Enforce git read-only restrictions in Review and Publish",
+      "description": "Add explicit tool/command restrictions so Review and Publish steps permit git read commands but block git write/edit commands.",
+      "status": "todo",
       "priority": "high"
     },
     {
       "id": 9,
-      "title": "Implement step implementation",
-      "description": "Invoke claude code session headless with implement prompt. Save session ID for potential resume. Run lint/build/test at intervals. Support resuming with code review feedback.",
-      "status": "done",
+      "title": "Harden publish verification completion gating",
+      "description": "Fail closed unless publish verification output explicitly indicates full completion, instead of relying on permissive string heuristics.",
+      "status": "todo",
       "priority": "high"
     },
     {
       "id": 10,
-      "title": "Review step implementation",
-      "description": "Invoke codex session headless with code-review skill prompt. Write review to _thoughts/code-review/NNN_topic_name.md. If changes needed in run mode, go back to Implement step. Exit after 4 failed reviews.",
-      "status": "done",
+      "title": "Enforce Implement success criteria postconditions",
+      "description": "Verify plan completion, required tests, and passing checks as concrete postconditions for Implement success rather than only external process exit status.",
+      "status": "todo",
       "priority": "high"
     },
     {
       "id": 11,
-      "title": "Publish step implementation",
-      "description": "Invoke codex session to confirm all plan items implemented. Check for gh CLI in PATH. Create pull request using gh CLI if everything passes. Error if gh not found or implementation incomplete.",
-      "status": "done",
-      "priority": "high"
+      "title": "Update README and CLI help text to match spec behavior",
+      "description": "Correct documented workflow, default agent mapping, prerequisite wording, and artifact naming guidance to reflect spec-defined behavior.",
+      "status": "todo",
+      "priority": "normal"
     },
     {
       "id": 12,
-      "title": "Run command orchestration",
-      "description": "Implement the full workflow orchestration: spawn -> research -> plan -> validate -> implement -> review -> publish. Handle step transitions and retry logic.",
-      "status": "done",
-      "priority": "high"
-    },
-    {
-      "id": 13,
-      "title": "Create config files for all steps",
-      "description": "Create markdown config files with YAML front-matter in config/ directory for each workflow step: spawn.md, research.md, plan.md, validate.md, implement.md, review.md, publish.md.",
-      "status": "done",
-      "priority": "high"
-    },
-    {
-      "id": 14,
-      "title": "Update README.md with documentation",
-      "description": "Document prerequisites (Bun, gh, claude, codex), installation instructions, build/test commands, usage examples for all CLI commands, and the git worktree structure requirements.",
-      "status": "done",
-      "priority": "normal"
-    },
-    {
-      "id": 15,
-      "title": "Add unit tests for core functionality",
-      "description": "Add unit tests for JSON payload parsing, config file loading, variable substitution, git worktree detection, and CLI argument parsing.",
-      "status": "done",
-      "priority": "normal"
-    },
-    {
-      "id": 16,
-      "title": "Add integration tests",
-      "description": "Add integration tests for the full workflow with mocked claude/codex CLI invocations.",
-      "status": "done",
-      "priority": "normal"
-    },
-    {
-      "id": 17,
-      "title": "Add tests for config file loading",
-      "description": "Add unit tests for loading and parsing config files with YAML front-matter and variable substitution.",
-      "status": "done",
-      "priority": "normal"
-    },
-    {
-      "id": 18,
-      "title": "Add end-to-end workflow test",
-      "description": "Add E2E test that simulates the full workflow with mocked external CLI tools (claude, codex, gh).",
-      "status": "done",
-      "priority": "low"
-    },
-    {
-      "id": 19,
-      "title": "Session ID persistence for implement step",
-      "description": "Implement file-based persistence for session IDs to enable resuming claude sessions between separate CLI invocations. Store session ID in .ralph/session file within worktree directory. Load session ID when running implement step after review feedback.",
-      "status": "done",
-      "priority": "high"
-    },
-    {
-      "id": 20,
-      "title": "Add verbose/debug logging mode",
-      "description": "Add --verbose or --debug flag to CLI commands to enable detailed logging of workflow steps, config loading, and external command invocations for troubleshooting.",
-      "status": "done",
-      "priority": "normal"
-    },
-    {
-      "id": 21,
-      "title": "Validate skill file paths exist before agent invocation",
-      "description": "Config files reference _agents/skills/ paths. Add validation that these skill files exist before invoking agents to provide better error messages.",
-      "status": "done",
-      "priority": "normal"
-    },
-    {
-      "id": 22,
-      "title": "Fix README Codex documentation link",
-      "description": "Update README.md to point to correct Codex CLI documentation instead of the deprecated github.com/openai/codex link.",
-      "status": "done",
-      "priority": "low"
-    },
-    {
-      "id": 23,
-      "title": "Add tests for verbose logging mode",
-      "description": "Add unit tests for the logger utility including setVerbose, isVerbose, debug, debugObject, and info functions.",
-      "status": "done",
-      "priority": "normal"
-    },
-    {
-      "id": 24,
-      "title": "Improve input validation for issue payload",
-      "description": "Add validation for whitespace-only strings in id/title fields, issue ID format validation (alphanumeric and hyphens only), and protection against path traversal in issue IDs.",
-      "status": "done",
-      "priority": "high"
-    },
-    {
-      "id": 25,
-      "title": "Add timeout mechanism for shell commands in spawn step",
-      "description": "The spawn step's runShellCommand() function has no timeout. If an install/build/test command hangs, the workflow stalls indefinitely. Add configurable timeout with reasonable default.",
-      "status": "done",
-      "priority": "high"
-    },
-    {
-      "id": 26,
-      "title": "Add detailed help text for all CLI commands",
-      "description": "The spec requires 'Each CLI action should have an associated --help flag, which prints all relevant command flags and arguments that are possible.' Add comprehensive help text for each command.",
-      "status": "done",
-      "priority": "normal"
-    },
-    {
-      "id": 27,
-      "title": "Add lock mechanism to prevent concurrent execution",
-      "description": "Add a file-based lock mechanism to prevent multiple Ralph instances from running simultaneously on the same worktree. Create lock file at workflow start, remove on completion/failure, and check for stale locks.",
-      "status": "done",
-      "priority": "high"
-    },
-    {
-      "id": 28,
-      "title": "Add workflow state persistence for resumable workflows",
-      "description": "Save workflow state (current step, context) to .ralph/state file to allow resuming interrupted workflows from last successful step.",
-      "status": "todo",
-      "priority": "normal"
-    },
-    {
-      "id": 29,
-      "title": "Add cleanup mechanism for failed worktrees",
-      "description": "When spawn or early workflow steps fail critically, provide option to clean up partial worktree directories.",
-      "status": "todo",
-      "priority": "low"
-    },
-    {
-      "id": 30,
-      "title": "Add tests for git utility edge cases",
-      "description": "Expand test coverage for git.ts including worktree creation errors, branch conflicts, and edge cases in bare repository detection.",
+      "title": "De-scope spawn config from core spec workflow",
+      "description": "Remove or clearly separate `config/spawn.md` from the core spec-defined workflow surface to avoid divergence and confusion.",
       "status": "todo",
       "priority": "normal"
     }
