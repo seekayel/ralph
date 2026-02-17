@@ -353,7 +353,13 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
       mockRunAgentCommand.mockResolvedValueOnce({
         success: true,
         exitCode: 0,
-        stdout: "Implementation completed. session_id: e2e-impl-session-123",
+        stdout: `
+Implementation completed. session_id: e2e-impl-session-123
+IMPLEMENT_POSTCONDITIONS
+PLAN_COMPLETE: yes
+REQUIRED_TESTS: yes
+CHECKS_PASSING: yes
+`,
         stderr: "",
       });
 
@@ -368,7 +374,13 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
       mockRunAgentCommand.mockResolvedValueOnce({
         success: true,
         exitCode: 0,
-        stdout: "Implementation completed successfully",
+        stdout: `
+Implementation completed successfully
+IMPLEMENT_POSTCONDITIONS
+PLAN_COMPLETE: yes
+REQUIRED_TESTS: yes
+CHECKS_PASSING: yes
+`,
         stderr: "",
       });
 
@@ -396,7 +408,13 @@ Confirm implementation is complete for issue \${issue.id}: \${issue.title}`;
       mockRunAgentCommand.mockResolvedValueOnce({
         success: true,
         exitCode: 0,
-        stdout: "Fixed issues from review",
+        stdout: `
+Fixed issues from review
+IMPLEMENT_POSTCONDITIONS
+PLAN_COMPLETE: yes
+REQUIRED_TESTS: yes
+CHECKS_PASSING: yes
+`,
         stderr: "",
       });
 
@@ -639,7 +657,13 @@ Test prompt for \${issue.id}`;
       mockRunAgentCommand.mockResolvedValueOnce({
         success: true,
         exitCode: 0,
-        stdout: `Impl ${context.codeReviewAttempts + 1}. session_id: s${context.codeReviewAttempts + 1}`,
+        stdout: `Impl ${context.codeReviewAttempts + 1}. session_id: s${
+          context.codeReviewAttempts + 1
+        }
+IMPLEMENT_POSTCONDITIONS
+PLAN_COMPLETE: yes
+REQUIRED_TESTS: yes
+CHECKS_PASSING: yes`,
         stderr: "",
       });
 

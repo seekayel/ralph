@@ -320,7 +320,13 @@ Confirm implementation is complete for issue \${issue.id}`;
       mockRunAgentCommand.mockResolvedValueOnce({
         success: true,
         exitCode: 0,
-        stdout: "Implementation completed. session_id: abc123",
+        stdout: `
+Implementation completed. session_id: abc123
+IMPLEMENT_POSTCONDITIONS
+PLAN_COMPLETE: yes
+REQUIRED_TESTS: yes
+CHECKS_PASSING: yes
+`,
         stderr: "",
       });
 
@@ -349,7 +355,13 @@ Confirm implementation is complete for issue \${issue.id}`;
       mockRunAgentCommand.mockResolvedValueOnce({
         success: true,
         exitCode: 0,
-        stdout: "Fixed issues from review",
+        stdout: `
+Fixed issues from review
+IMPLEMENT_POSTCONDITIONS
+PLAN_COMPLETE: yes
+REQUIRED_TESTS: yes
+CHECKS_PASSING: yes
+`,
         stderr: "",
       });
 

@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import type { Issue, WorkflowContext } from "../types.js";
 
 const callOrder: string[] = [];
@@ -58,41 +58,54 @@ const mockPublish = mock((_: WorkflowContext) => {
 
 const mockGetReviewFeedback = mock(() => Promise.resolve("feedback"));
 
-mock.module("../utils/lock.js", () => ({
-  acquireLock: mockAcquireLock,
-  releaseLock: mockReleaseLock,
-}));
+async function importRunWithMocks() {
+  mock.module("../utils/lock.js", () => ({
+    acquireLock: mockAcquireLock,
+    releaseLock: mockReleaseLock,
+  }));
 
-mock.module("./spawn.js", () => ({
-  spawn: mockSpawn,
-}));
+  mock.module("./spawn.js", () => ({
+    spawn: mockSpawn,
+    getCommandTimeout: () => {
+      const envTimeout = process.env.RALPH_COMMAND_TIMEOUT_MS;
+      if (envTimeout) {
+        const parsed = Number.parseInt(envTimeout, 10);
+        if (!Number.isNaN(parsed) && parsed > 0) {
+          return parsed;
+        }
+      }
+      return 300000;
+    },
+  }));
 
-mock.module("./research.js", () => ({
-  research: mockResearch,
-}));
+  mock.module("./research.js", () => ({
+    research: mockResearch,
+  }));
 
-mock.module("./plan.js", () => ({
-  plan: mockPlan,
-}));
+  mock.module("./plan.js", () => ({
+    plan: mockPlan,
+  }));
 
-mock.module("./validate.js", () => ({
-  validate: mockValidate,
-}));
+  mock.module("./validate.js", () => ({
+    validate: mockValidate,
+  }));
 
-mock.module("./implement.js", () => ({
-  implement: mockImplement,
-}));
+  mock.module("./implement.js", () => ({
+    implement: mockImplement,
+  }));
 
-mock.module("./review.js", () => ({
-  review: mockReview,
-  getReviewFeedback: mockGetReviewFeedback,
-}));
+  mock.module("./review.js", () => ({
+    review: mockReview,
+    getReviewFeedback: mockGetReviewFeedback,
+  }));
 
-mock.module("./publish.js", () => ({
-  publish: mockPublish,
-}));
+  mock.module("./publish.js", () => ({
+    publish: mockPublish,
+  }));
 
-import { run } from "./run.js";
+  const { run } = await import(`./run.js?test=${Date.now()}-${Math.random()}`);
+  return run;
+}
 
 describe("run workflow", () => {
   const issue: Issue = {
@@ -115,7 +128,12 @@ describe("run workflow", () => {
     mockGetReviewFeedback.mockClear();
   });
 
+  afterEach(() => {
+    mock.restore();
+  });
+
   it("runs research->plan->validate->implement->review->publish without spawn", async () => {
+    const run = await importRunWithMocks();
     const result = await run("/tmp/repo", issue);
 
     expect(result.success).toBe(true);
@@ -132,6 +150,7 @@ describe("run workflow", () => {
   });
 
   it("propagates per-step agent overrides through workflow context", async () => {
+    const run = await importRunWithMocks();
     const overrides = {
       research: "codex",
       plan: "codex",
