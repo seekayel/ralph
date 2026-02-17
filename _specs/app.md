@@ -1,4 +1,5 @@
-This application is a CLI tool called Ralph. It is built and bundled using Bun 1.3.6 or higher. It runs a sequence of operations when invoked. It is invoked with a JSON payload that contains an issue ID, an issue title, and an issue description. It is invoked in a directory that contains subfolders for each of the git work trees of the relevant repository. The CLI, if invoked with `run`, will run all steps in the ralph-cli workflow. Otherwise, each of the individual steps can be run with `ralph` and then the name of the step. For example, `ralph spawn`, `ralph research`, or `ralph plan`. The README.md of this repo should contain all information needed by a human to be able to check out, install, build, and run any associated tests on this repository. There should be example execution commands for the Ralph workflow. Each CLI action should have an associated --help flag, which prints all relevant command flags and arguments that are possible.
+This application is a CLI tool called Ralph. It is built and bundled using Bun 1.3.6 or higher. It runs one of a series of operations in a software development process when it is invoked. It is invoked with a JSON payload that contains an issue ID, an issue title, and an issue description. The CLI, if invoked with `run`, will run all steps in the ralph-cli workflow. Otherwise, each of the individual steps can be run with `ralph` and then the name of the step. For example, `ralph research`, or `ralph plan`. The README.md of this repo should contain all information needed by a human to be able to check out, install, build, and run any associated tests on this repository. There should be example execution commands for the Ralph workflow. Each CLI action should have an associated --help flag, which prints all relevant command flags and arguments that are possible. Ralph expects to be invoked from inside a git repository
+
 
 # Prerequisites
 
@@ -8,24 +9,10 @@ The README.md must document the following required dependencies:
 - **claude** - Claude Code CLI for AI-assisted coding sessions
 - **codex** - Codex CLI for validation and review sessions
 
-# Git Worktree Structure
-
-Ralph expects to be invoked from a git repository using the bare worktree pattern:
-
-```
-ralph-git/
-├── .bare/       # Git database (bare repository)
-├── .git         # File pointing to .bare/
-├── hln-1234/    # Feature branch worktree (e.g., ralph-HLN-1234)
-└── main/        # Main branch working tree
-```
-
-Ralph should be invoked from the root directory (`ralph-git/`) which contains the worktree subdirectories.
-
 # General Guidance
 
 **Error Handling**
-If the CLI is invoked in a directory that is not a Git work tree bare root directory, it should print an error message saying such and exit.
+If the CLI is invoked in a directory that is not a Git directory, it should print an error message saying such and exit.
 
 # Asset Bundling
 
@@ -38,14 +25,14 @@ The Ralph CLI bundles its configuration files and agent definitions into the com
 - This generated file is bundled into the final `dist/index.js` binary
 
 **Runtime Extraction:**
-- When Ralph runs a workflow step, it extracts the bundled `_agents/` to the worktree's `.ralph/` directory
-- The path becomes: `$WORKTREE_DIR/.ralph/_agents/`
+- When Ralph runs a workflow step, it extracts the bundled `_agents/` to the git repo's `.ralph/` directory
+- The path becomes: `$GIT_DIR/.ralph/_agents/`
 - A hash file (`.ralph/.assets-hash`) tracks whether extraction is needed
 - Config files are loaded directly from embedded assets (no extraction needed)
 
 **Directory Structure After Extraction:**
 ```
-worktree-dir/
+git-dir/
 ├── .ralph/
 │   ├── .assets-hash     # Hash for cache invalidation
 │   └── _agents/
@@ -64,26 +51,25 @@ worktree-dir/
 ```
 
 **Skill Path References:**
-Config files reference skills using the `.ralph/` prefix path, which resolves to the worktree directory:
+Config files reference skills using the `.ralph/` prefix path, which resolves to the git directory:
 ```
 Use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md`
 ```
 
 # AI Agent Invocation
 
-Ralph uses two AI agents for different workflow steps:
+Ralph uses two AI agents for different workflow steps by default:
 
-- **Claude Code** (`claude`) - Used for Research, Plan, and Implement steps
-- **Codex** (`codex`) - Used for Validate, Review, and Publish steps
+- **Claude Code** (`claude`) - Used for Research, Implement, and Review steps
+- **Codex** (`codex`) - Used for Plan, Validate, Review, and Publish steps
 
-Invoke each agent using its respective CLI command. Refer to `claude --help` and `codex --help` for available command flags and options. Ralph should invoke these commands as subprocesses and wait until the process returns before proceeding to the next step.
+Invoke each agent using its respective CLI command. Refer to `claude --help` and `codex --help` for available command flags and options. Ralph should invoke these commands as subprocesses and wait until the process returns before proceeding to the next step. Each step should allow for overriding the used coding agent.
 
 # Configuration Files
 
 Configuration files define which agent and flags to use for each workflow step. Config files are stored in `config/` during development and embedded into the CLI binary at build time. They use markdown format with YAML front-matter.
 
 **Available Config Files:**
-- `config/spawn.md` - Spawn step configuration
 - `config/research.md` - Research step configuration
 - `config/plan.md` - Plan step configuration
 - `config/validate.md` - Validate step configuration
@@ -185,22 +171,12 @@ The Run action takes a JSON payload either via standard input or from a file via
 
 
 ## Full CLI Workflow
-1. Spawn
-2. Research
-3. Plan
-4. Validate
-5. Implement
-6. Review
-7. Publish
-
-
-## Spawn
-
-**Action**
-Create a new git worktree and branch based on the issue ID. For example `HLN-14` becomes `ralph-HLN-14`. `cd` into the new worktree directory. Read the README.md for install, build and test commands.
-
-**Success Criteria**
-Only proceed if the tests complete successfully. Otherwise print an error message and exit with failing exit code.
+1. Research
+2. Plan
+3. Validate
+4. Implement
+5. Review
+6. Publish
 
 
 ## Research
@@ -209,7 +185,7 @@ Only proceed if the tests complete successfully. Otherwise print an error messag
 Invoke a claude code session headless with a prompt to use the research-plan-implement workflow in `.ralph/_agents/skills/research-plan-implement/skill.md` to research the code base in relation to the requested issue. Allow git read commands (status, diff, log, etc) but no git edits (add, commit, merge, push, checkout etc).
 
 **Success Criteria**
-Only proceed if the claude code session successfully generates a `_thoughts/research/NNN_topic_name.md` file. Otherwise retry once, if fails a second time then print error message and exit with a failure.
+Only proceed if the claude code session successfully generates a research report `_thoughts/research/NNN_topic_name.md` file. Otherwise retry once, if fails a second time then print error message and exit with a failure.
 
 
 ## Plan
