@@ -1,10 +1,9 @@
 ---
-command: claude
+command: codex
 args:
-  - "--print"
-  - "--dangerously-skip-permissions"
-  - "--disallowed-tools"
-  - "Bash(git add:git commit:git push:git checkout:git merge:git rebase:git reset:git branch -d:git branch -D)"
+  - "exec"
+  - "--sandbox"
+  - "workspace-write"
 ---
 
 Use the research-plan-implement workflow defined in `.ralph/_agents/skills/research-plan-implement/skill.md` to create an implementation plan.

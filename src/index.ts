@@ -27,8 +27,8 @@ program
   .option("-n, --dry-run", "Print the command that would be executed without running it")
   .addHelpText("after", `
 Ralph automates the software development workflow using AI agents:
-  - Claude Code for research, planning, and implementation
-  - Codex for validation, code review, and publish verification
+  - Claude Code for research and implementation
+  - Codex for planning, validation, code review, and publish verification
 
 Prerequisites:
   - Bun v1.3.6+     Runtime and build tool
@@ -43,7 +43,7 @@ Commands:
   run        Full workflow: research -> plan -> validate -> implement -> review -> publish
   spawn      Create git worktree and branch, run install/build/test
   research   Analyze codebase with Claude Code
-  plan       Create implementation plan with Claude Code
+  plan       Create implementation plan with Codex
   validate   Validate plan with Codex
   implement  Implement the plan with Claude Code
   review     Code review with Codex
@@ -126,7 +126,7 @@ Examples:
 
 Workflow Steps:
   1. research   - Analyze codebase using Claude Code (outputs _thoughts/research/)
-  2. plan       - Create implementation plan using Claude Code (outputs _thoughts/plan/)
+  2. plan       - Create implementation plan using Codex (outputs _thoughts/plan/)
   3. validate   - Validate plan using Codex (retries up to 4 times)
   4. implement  - Implement the plan using Claude Code
   5. review     - Code review using Codex (retries up to 4 times)
@@ -264,7 +264,7 @@ JSON Payload Schema:
 
 program
   .command("plan")
-  .description("Run the planning phase using Claude Code")
+  .description("Run the planning phase using Codex")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
   .addHelpText("after", `
 Examples:
@@ -276,7 +276,7 @@ Prerequisites:
   Research step must be completed first (_thoughts/research/ file must exist)
 
 Behavior:
-  1. Invokes Claude Code in headless mode with research-plan-implement workflow
+  1. Invokes Codex in headless mode with research-plan-implement workflow
   2. Creates implementation and testing plan based on research findings
   3. Only allows git read commands (status, diff, log) - no writes
   4. Retries once on failure before exiting with error

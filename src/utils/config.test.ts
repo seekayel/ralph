@@ -337,6 +337,13 @@ describe("loadStepConfig", () => {
     expect(config.prompt).toBeDefined();
   });
 
+  it("uses codex as the default plan agent", async () => {
+    const config = await loadStepConfig("config/plan.md", testIssue);
+
+    expect(config.command).toBe("codex");
+    expect(config.args).toEqual(["exec", "--sandbox", "workspace-write"]);
+  });
+
   it("substitutes variables in prompt body", async () => {
     // Use actual embedded config that contains variables
     const config = await loadStepConfig("config/research.md", testIssue);
