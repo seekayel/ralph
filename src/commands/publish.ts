@@ -7,6 +7,9 @@ import { syncAgentsToWorktree } from "../utils/paths.js";
 import { checkCommandExists, runAgentCommand } from "../utils/process.js";
 
 const CONFIG_PATH = "config/publish.md";
+const COMPLETE_VERDICT_PATTERN =
+  /(^|\n)\s*(?:[-*]\s*)?["'`]*all items implemented - ready for pr["'`]*\s*[.!]?\s*(?=\n|$)/i;
+const INCOMPLETE_VERDICT_PATTERN = /\bimplementation\s+incomplete\b/i;
 
 export async function publish(
   context: WorkflowContext
@@ -86,15 +89,12 @@ export async function publish(
   }
 }
 
-function checkImplementationComplete(output: string): boolean {
-  const lowerOutput = output.toLowerCase();
-  return (
-    lowerOutput.includes("complete") ||
-    lowerOutput.includes("all items implemented") ||
-    lowerOutput.includes("ready for pr") ||
-    lowerOutput.includes("meets quality bar") ||
-    (!lowerOutput.includes("incomplete") && !lowerOutput.includes("missing"))
-  );
+export function checkImplementationComplete(output: string): boolean {
+  if (INCOMPLETE_VERDICT_PATTERN.test(output)) {
+    return false;
+  }
+
+  return COMPLETE_VERDICT_PATTERN.test(output);
 }
 
 async function createPullRequest(
