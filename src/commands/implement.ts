@@ -28,7 +28,14 @@ export async function implement(
     // Sync agents to worktree before invoking Claude
     await syncAgentsToWorktree(context.worktreeDir);
 
-    let config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
+    let config = await loadStepConfig(
+      CONFIG_PATH,
+      context.issue,
+      context.worktreeDir,
+      {
+        commandOverride: context.agentOverrides?.implement,
+      }
+    );
 
     // Load session ID from file if not in context (for standalone CLI invocations)
     let sessionId = context.sessionId;

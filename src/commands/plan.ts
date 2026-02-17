@@ -70,7 +70,10 @@ async function runPlanStep(
     const config = await loadStepConfig(
       CONFIG_PATH,
       context.issue,
-      context.worktreeDir
+      context.worktreeDir,
+      {
+        commandOverride: context.agentOverrides?.plan,
+      }
     );
     const result = await runAgentCommand(config, context.worktreeDir, {
       stepName: `plan-${context.issue.id}`,

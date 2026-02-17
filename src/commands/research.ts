@@ -70,7 +70,10 @@ async function runResearchStep(
     const config = await loadStepConfig(
       CONFIG_PATH,
       context.issue,
-      context.worktreeDir
+      context.worktreeDir,
+      {
+        commandOverride: context.agentOverrides?.research,
+      }
     );
     const result = await runAgentCommand(config, context.worktreeDir, {
       stepName: `research-${context.issue.id}`,

@@ -427,6 +427,59 @@ Confirm implementation is complete for issue \${issue.id}`;
     });
   });
 
+  describe("agent overrides", () => {
+    it("uses the research step agent override command", async () => {
+      mockRunAgentCommand.mockResolvedValueOnce({
+        success: true,
+        exitCode: 0,
+        stdout: "Research completed",
+        stderr: "",
+      });
+
+      await writeFile(
+        join(worktreeDir, "_thoughts", "research", "001_test_feature.md"),
+        "# Research findings"
+      );
+
+      const result = await research({
+        ...testContext,
+        agentOverrides: {
+          research: "codex",
+        },
+      });
+
+      expect(result.success).toBe(true);
+      expect(mockRunAgentCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ command: "codex" }),
+        worktreeDir,
+        expect.objectContaining({ stepName: `research-${testIssue.id}` })
+      );
+    });
+
+    it("uses the publish step agent override command", async () => {
+      mockCheckCommandExists.mockResolvedValueOnce(true);
+      mockRunAgentCommand.mockResolvedValueOnce({
+        success: true,
+        exitCode: 0,
+        stdout: "All items implemented. Ready for PR.",
+        stderr: "",
+      });
+
+      await publish({
+        ...testContext,
+        agentOverrides: {
+          publish: "claude",
+        },
+      });
+
+      expect(mockRunAgentCommand).toHaveBeenCalledWith(
+        expect.objectContaining({ command: "claude" }),
+        worktreeDir,
+        expect.objectContaining({ stepName: `publish-${testIssue.id}` })
+      );
+    });
+  });
+
   describe("publish step", () => {
     it("fails when gh CLI is not found", async () => {
       mockCheckCommandExists.mockResolvedValueOnce(false);

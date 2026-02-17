@@ -1,4 +1,9 @@
-import type { Issue, StepResult, WorkflowContext } from "../types.js";
+import type {
+  Issue,
+  StepAgentOverrides,
+  StepResult,
+  WorkflowContext,
+} from "../types.js";
 import { issueToBranchName, issueToWorktreeName } from "../utils/config.js";
 import { acquireLock, releaseLock } from "../utils/lock.js";
 import { debug, debugObject } from "../utils/logger.js";
@@ -12,9 +17,14 @@ import { validate } from "./validate.js";
 const MAX_VALIDATION_ATTEMPTS = 4;
 const MAX_REVIEW_ATTEMPTS = 4;
 
+export interface RunOptions {
+  agentOverrides?: StepAgentOverrides;
+}
+
 export async function run(
   rootDir: string,
-  issue: Issue
+  issue: Issue,
+  options: RunOptions = {}
 ): Promise<StepResult> {
   debug("Starting full workflow run");
   debug(`Root directory: ${rootDir}`);
@@ -34,7 +44,7 @@ export async function run(
   }
 
   try {
-    return await runWorkflow(rootDir, issue);
+    return await runWorkflow(rootDir, issue, options.agentOverrides);
   } finally {
     // Always release the lock when done
     await releaseLock(rootDir);
@@ -43,7 +53,8 @@ export async function run(
 
 async function runWorkflow(
   rootDir: string,
-  issue: Issue
+  issue: Issue,
+  agentOverrides?: StepAgentOverrides
 ): Promise<StepResult> {
   console.log(`\n=== Starting Ralph workflow for ${issue.id} ===\n`);
 
@@ -52,6 +63,7 @@ async function runWorkflow(
     issue,
     worktreeDir: `${rootDir}/${worktreeName}`,
     branchName: issueToBranchName(issue.id),
+    agentOverrides,
     planValidationAttempts: 0,
     codeReviewAttempts: 0,
   };

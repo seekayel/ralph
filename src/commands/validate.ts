@@ -19,7 +19,14 @@ export async function validate(
     // Sync agents to worktree before invoking Codex
     await syncAgentsToWorktree(context.worktreeDir);
 
-    const config = await loadStepConfig(CONFIG_PATH, context.issue, context.worktreeDir);
+    const config = await loadStepConfig(
+      CONFIG_PATH,
+      context.issue,
+      context.worktreeDir,
+      {
+        commandOverride: context.agentOverrides?.validate,
+      }
+    );
     const result = await runAgentCommand(config, context.worktreeDir, {
       stepName: `validate-${context.issue.id}`,
     });

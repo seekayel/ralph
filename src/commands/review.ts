@@ -37,7 +37,10 @@ export async function review(
     const config = await loadStepConfig(
       CONFIG_PATH,
       context.issue,
-      context.worktreeDir
+      context.worktreeDir,
+      {
+        commandOverride: context.agentOverrides?.review,
+      }
     );
     const result = await runAgentCommand(config, context.worktreeDir, {
       stepName: `review-${context.issue.id}`,

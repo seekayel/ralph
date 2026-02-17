@@ -8,7 +8,11 @@ import { review } from "./commands/review.js";
 import { run } from "./commands/run.js";
 import { spawn } from "./commands/spawn.js";
 import { validate } from "./commands/validate.js";
-import type { WorkflowContext } from "./types.js";
+import type {
+  StepAgentOverrides,
+  WorkflowContext,
+  WorkflowStepName,
+} from "./types.js";
 import { readPayloadFromStdinOrFile } from "./utils/config.js";
 import { getGitRepositoryRoot, isGitRepository } from "./utils/git.js";
 import { debug, setVerbose, setDebugDir, setDryRun } from "./utils/logger.js";
@@ -118,6 +122,12 @@ program
   .command("run")
   .description("Run the full Ralph workflow (research -> plan -> validate -> implement -> review -> publish)")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
+  .option("--research-agent <command>", "Override the agent command for the research step")
+  .option("--plan-agent <command>", "Override the agent command for the plan step")
+  .option("--validate-agent <command>", "Override the agent command for the validate step")
+  .option("--implement-agent <command>", "Override the agent command for the implement step")
+  .option("--review-agent <command>", "Override the agent command for the review step")
+  .option("--publish-agent <command>", "Override the agent command for the publish step")
   .addHelpText("after", `
 Examples:
   $ echo '{"id": "HLN-123", "title": "Add feature", "description": "Feature details"}' | ralph run
@@ -147,7 +157,9 @@ Environment Variables:
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
-      const result = await run(rootDir, issue);
+      const result = await run(rootDir, issue, {
+        agentOverrides: createRunAgentOverrides(options),
+      });
 
       if (!result.success) {
         process.exit(1);
@@ -213,6 +225,7 @@ program
   .command("research")
   .description("Run the research phase using Claude Code")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
+  .option("--agent <command>", "Override the agent command for this step")
   .addHelpText("after", `
 Examples:
   $ echo '{"id": "HLN-123", "title": "Add feature", "description": "..."}' | ralph research
@@ -244,7 +257,11 @@ JSON Payload Schema:
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
-      const context = createContextFromIssue(issue, rootDir);
+      const context = createContextFromIssue(
+        issue,
+        rootDir,
+        createStepAgentOverrides("research", options.agent)
+      );
       const result = await research(context);
 
       if (!result.success) {
@@ -266,6 +283,7 @@ program
   .command("plan")
   .description("Run the planning phase using Codex")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
+  .option("--agent <command>", "Override the agent command for this step")
   .addHelpText("after", `
 Examples:
   $ echo '{"id": "HLN-123", "title": "Add feature", "description": "..."}' | ralph plan
@@ -300,7 +318,11 @@ JSON Payload Schema:
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
-      const context = createContextFromIssue(issue, rootDir);
+      const context = createContextFromIssue(
+        issue,
+        rootDir,
+        createStepAgentOverrides("plan", options.agent)
+      );
       const result = await plan(context);
 
       if (!result.success) {
@@ -322,6 +344,7 @@ program
   .command("validate")
   .description("Validate the implementation plan using Codex")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
+  .option("--agent <command>", "Override the agent command for this step")
   .addHelpText("after", `
 Examples:
   $ echo '{"id": "HLN-123", "title": "Add feature", "description": "..."}' | ralph validate
@@ -357,7 +380,11 @@ JSON Payload Schema:
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
-      const context = createContextFromIssue(issue, rootDir);
+      const context = createContextFromIssue(
+        issue,
+        rootDir,
+        createStepAgentOverrides("validate", options.agent)
+      );
       const result = await validate(context);
 
       if (result.needsChanges) {
@@ -378,6 +405,7 @@ program
   .description("Run the implementation phase using Claude Code")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
   .option("-f, --feedback <file>", "Code review feedback file to address (resumes previous session)")
+  .option("--agent <command>", "Override the agent command for this step")
   .addHelpText("after", `
 Examples:
   $ echo '{"id": "HLN-123", "title": "Add feature", "description": "..."}' | ralph implement
@@ -415,7 +443,11 @@ JSON Payload Schema:
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
-      const context = createContextFromIssue(issue, rootDir);
+      const context = createContextFromIssue(
+        issue,
+        rootDir,
+        createStepAgentOverrides("implement", options.agent)
+      );
 
       let reviewFeedback: string | undefined;
       if (options.feedback) {
@@ -443,6 +475,7 @@ program
   .command("review")
   .description("Run the code review phase using Codex")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
+  .option("--agent <command>", "Override the agent command for this step")
   .addHelpText("after", `
 Examples:
   $ echo '{"id": "HLN-123", "title": "Add feature", "description": "..."}' | ralph review
@@ -482,7 +515,11 @@ JSON Payload Schema:
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
-      const context = createContextFromIssue(issue, rootDir);
+      const context = createContextFromIssue(
+        issue,
+        rootDir,
+        createStepAgentOverrides("review", options.agent)
+      );
       const result = await review(context);
 
       if (result.needsChanges) {
@@ -505,6 +542,7 @@ program
   .command("publish")
   .description("Verify implementation and create a pull request")
   .option("-i, --input <file>", "JSON payload file (reads from stdin if not provided)")
+  .option("--agent <command>", "Override the agent command for this step")
   .addHelpText("after", `
 Examples:
   $ echo '{"id": "HLN-123", "title": "Add feature", "description": "..."}' | ralph publish
@@ -545,7 +583,11 @@ JSON Payload Schema:
 
     try {
       const issue = await readPayloadFromStdinOrFile(options.input);
-      const context = createContextFromIssue(issue, rootDir);
+      const context = createContextFromIssue(
+        issue,
+        rootDir,
+        createStepAgentOverrides("publish", options.agent)
+      );
       const result = await publish(context);
 
       if (!result.success) {
@@ -562,9 +604,54 @@ JSON Payload Schema:
 
 function createContextFromIssue(
   issue: { id: string; title: string; description: string },
-  rootDir: string
+  rootDir: string,
+  agentOverrides?: StepAgentOverrides
 ): WorkflowContext {
-  return createWorkflowContext(issue, rootDir);
+  return createWorkflowContext(issue, rootDir, agentOverrides);
+}
+
+function createStepAgentOverrides(
+  step: WorkflowStepName,
+  agentCommand?: string
+): StepAgentOverrides | undefined {
+  const normalizedCommand = agentCommand?.trim();
+  if (!normalizedCommand) {
+    return undefined;
+  }
+
+  return { [step]: normalizedCommand };
+}
+
+function createRunAgentOverrides(options: {
+  researchAgent?: string;
+  planAgent?: string;
+  validateAgent?: string;
+  implementAgent?: string;
+  reviewAgent?: string;
+  publishAgent?: string;
+}): StepAgentOverrides | undefined {
+  const overrides: StepAgentOverrides = {};
+
+  if (options.researchAgent?.trim()) {
+    overrides.research = options.researchAgent.trim();
+  }
+  if (options.planAgent?.trim()) {
+    overrides.plan = options.planAgent.trim();
+  }
+  if (options.validateAgent?.trim()) {
+    overrides.validate = options.validateAgent.trim();
+  }
+  if (options.implementAgent?.trim()) {
+    overrides.implement = options.implementAgent.trim();
+  }
+  if (options.reviewAgent?.trim()) {
+    overrides.review = options.reviewAgent.trim();
+  }
+  if (options.publishAgent?.trim()) {
+    overrides.publish = options.publishAgent.trim();
+  }
+
+  return Object.keys(overrides).length > 0 ? overrides : undefined;
 }
 
 program.parse();

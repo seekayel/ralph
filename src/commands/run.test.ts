@@ -130,4 +130,25 @@ describe("run workflow", () => {
     expect(mockSpawn).not.toHaveBeenCalled();
     expect(mockReleaseLock).toHaveBeenCalledWith("/tmp/repo");
   });
+
+  it("propagates per-step agent overrides through workflow context", async () => {
+    const overrides = {
+      research: "codex",
+      plan: "codex",
+      validate: "codex",
+      implement: "claude",
+      review: "codex",
+      publish: "codex",
+    } as const;
+
+    const result = await run("/tmp/repo", issue, { agentOverrides: overrides });
+
+    expect(result.success).toBe(true);
+    expect(mockResearch).toHaveBeenCalledWith(
+      expect.objectContaining({ agentOverrides: overrides })
+    );
+    expect(mockPublish).toHaveBeenCalledWith(
+      expect.objectContaining({ agentOverrides: overrides })
+    );
+  });
 });

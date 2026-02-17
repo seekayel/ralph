@@ -8,6 +8,10 @@ interface ConfigFrontMatter {
   args?: string[];
 }
 
+interface LoadStepConfigOptions {
+  commandOverride?: string;
+}
+
 /**
  * Extracts skill file paths from config prompt text.
  * Looks for patterns like .ralph/_agents/skills/foo/skill.md
@@ -62,7 +66,8 @@ export async function validateSkillPaths(
 export async function loadStepConfig(
   configPath: string,
   issue: Issue,
-  worktreeDir?: string
+  worktreeDir?: string,
+  options: LoadStepConfigOptions = {}
 ): Promise<StepConfig> {
   debug(`Loading config from embedded assets: ${configPath}`);
 
@@ -71,7 +76,12 @@ export async function loadStepConfig(
     throw new Error(`Config not found in embedded assets: ${configPath}`);
   }
 
-  const stepConfig = parseStepConfigContent(content, issue, configPath);
+  const stepConfig = parseStepConfigContent(
+    content,
+    issue,
+    configPath,
+    options.commandOverride
+  );
 
   // Validate skill paths if worktreeDir is provided
   if (worktreeDir) {
@@ -101,7 +111,8 @@ function parseFrontMatter(content: string): {
 export function parseStepConfigContent(
   content: string,
   issue: Issue,
-  configPath = "<inline>"
+  configPath = "<inline>",
+  commandOverride?: string
 ): StepConfig {
   debug(`Parsing config content for ${configPath}, size: ${content.length} bytes`);
 
@@ -116,7 +127,13 @@ export function parseStepConfigContent(
     throw new Error(`Config file missing required 'command' field: ${configPath}`);
   }
 
-  const substitutedCommand = substituteVariables(parsed.command, issue);
+  const trimmedCommandOverride = commandOverride?.trim();
+  if (commandOverride !== undefined && !trimmedCommandOverride) {
+    throw new Error("Agent command override cannot be empty");
+  }
+
+  const commandSource = trimmedCommandOverride || parsed.command;
+  const substitutedCommand = substituteVariables(commandSource, issue);
   const substitutedArgs = (parsed.args || []).map((arg) =>
     substituteVariables(String(arg), issue)
   );

@@ -10,11 +10,22 @@ export interface StepConfig {
   prompt: string;
 }
 
+export type WorkflowStepName =
+  | "research"
+  | "plan"
+  | "validate"
+  | "implement"
+  | "review"
+  | "publish";
+
+export type StepAgentOverrides = Partial<Record<WorkflowStepName, string>>;
+
 export interface WorkflowContext {
   issue: Issue;
   worktreeDir: string;
   branchName: string;
   sessionId?: string;
+  agentOverrides?: StepAgentOverrides;
   planValidationAttempts: number;
   codeReviewAttempts: number;
 }

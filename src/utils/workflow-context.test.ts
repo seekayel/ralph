@@ -15,4 +15,21 @@ describe("createWorkflowContext", () => {
     expect(context.worktreeDir).toBe("/tmp/repository");
     expect(context.branchName).toBe("ralph-TEST-123");
   });
+
+  it("preserves per-step agent overrides", () => {
+    const context = createWorkflowContext(
+      {
+        id: "TEST-456",
+        title: "Agent override",
+        description: "desc",
+      },
+      "/tmp/repository",
+      { research: "codex", implement: "claude" }
+    );
+
+    expect(context.agentOverrides).toEqual({
+      research: "codex",
+      implement: "claude",
+    });
+  });
 });

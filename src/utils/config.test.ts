@@ -402,6 +402,25 @@ describe("loadStepConfig", () => {
     expect(config.prompt).toContain("TEST-123");
   });
 
+  it("overrides the configured command when a per-step agent is provided", async () => {
+    const config = await loadStepConfig(
+      "config/research.md",
+      testIssue,
+      undefined,
+      { commandOverride: "codex" }
+    );
+
+    expect(config.command).toBe("codex");
+  });
+
+  it("throws when the per-step agent override is empty", async () => {
+    await expect(
+      loadStepConfig("config/research.md", testIssue, undefined, {
+        commandOverride: "   ",
+      })
+    ).rejects.toThrow("Agent command override cannot be empty");
+  });
+
   it("throws error if config not found in embedded assets", async () => {
     await expect(
       loadStepConfig("nonexistent/config.md", testIssue)
