@@ -21,6 +21,16 @@ Use the research-plan-implement workflow defined in `.ralph/_agents/skills/resea
 4. Add tests as specified in the testing strategy
 5. Commit changes incrementally after each logical unit of work
 6. Track progress in `_thoughts/implement/NNN_topic_name.md`
+7. End your response with this exact postcondition block (use `yes` or `no` for each field):
+
+```text
+IMPLEMENT_POSTCONDITIONS
+PLAN_COMPLETE: yes|no
+REQUIRED_TESTS: yes|no
+CHECKS_PASSING: yes|no
+```
+
+If any field is `no`, explain what remains before the block.
 
 ## Implementation Rules
 
@@ -36,3 +46,4 @@ Use the research-plan-implement workflow defined in `.ralph/_agents/skills/resea
 - Tests exercise the added feature
 - Lint, build, and test pass
 - All changes are committed
+- Postcondition block reports `yes` for `PLAN_COMPLETE`, `REQUIRED_TESTS`, and `CHECKS_PASSING`

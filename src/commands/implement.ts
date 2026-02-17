@@ -7,6 +7,24 @@ import { runAgentCommand } from "../utils/process.js";
 import { loadSessionId, saveSessionId } from "../utils/session.js";
 
 const CONFIG_PATH = "config/implement.md";
+const PLAN_COMPLETE_POSITIVE_PATTERN =
+  /(^|\n)\s*(?:[-*]\s*)?PLAN_COMPLETE\s*:\s*(?:yes|true)\b/i;
+const PLAN_COMPLETE_NEGATIVE_PATTERN =
+  /(^|\n)\s*(?:[-*]\s*)?PLAN_COMPLETE\s*:\s*(?:no|false|fail|failed|incomplete)\b/i;
+const REQUIRED_TESTS_POSITIVE_PATTERN =
+  /(^|\n)\s*(?:[-*]\s*)?REQUIRED_TESTS\s*:\s*(?:yes|true)\b/i;
+const REQUIRED_TESTS_NEGATIVE_PATTERN =
+  /(^|\n)\s*(?:[-*]\s*)?REQUIRED_TESTS\s*:\s*(?:no|false|fail|failed|missing)\b/i;
+const CHECKS_PASSING_POSITIVE_PATTERN =
+  /(^|\n)\s*(?:[-*]\s*)?CHECKS_PASSING\s*:\s*(?:yes|true)\b/i;
+const CHECKS_PASSING_NEGATIVE_PATTERN =
+  /(^|\n)\s*(?:[-*]\s*)?CHECKS_PASSING\s*:\s*(?:no|false|fail|failed|failing)\b/i;
+
+interface ImplementPostconditions {
+  planComplete: boolean;
+  requiredTests: boolean;
+  checksPassing: boolean;
+}
 
 async function ensureThoughtsDir(worktreeDir: string, subdir: string): Promise<void> {
   const dir = `${worktreeDir}/_thoughts/${subdir}`;
@@ -71,6 +89,20 @@ export async function implement(
     }
 
     if (result.success) {
+      const postconditions = evaluateImplementPostconditions(result.stdout);
+      const missingPostconditions = getMissingImplementPostconditions(postconditions);
+
+      if (missingPostconditions.length > 0) {
+        debug(
+          `Implementation postconditions not met: ${missingPostconditions.join(", ")}`
+        );
+        return {
+          success: false,
+          message: `Implementation postconditions not met: ${missingPostconditions.join(", ")}`,
+          sessionId: finalSessionId,
+        };
+      }
+
       debug("Implementation completed successfully");
       return {
         success: true,
@@ -97,4 +129,63 @@ export async function implement(
 function extractSessionId(output: string): string | undefined {
   const sessionIdMatch = output.match(/session[_-]?id[:\s]+([a-zA-Z0-9-_]+)/i);
   return sessionIdMatch?.[1];
+}
+
+function isExplicitlySatisfied(
+  output: string,
+  positivePattern: RegExp,
+  negativePattern: RegExp
+): boolean {
+  return positivePattern.test(output) && !negativePattern.test(output);
+}
+
+export function evaluateImplementPostconditions(
+  output: string
+): ImplementPostconditions {
+  return {
+    planComplete: isExplicitlySatisfied(
+      output,
+      PLAN_COMPLETE_POSITIVE_PATTERN,
+      PLAN_COMPLETE_NEGATIVE_PATTERN
+    ),
+    requiredTests: isExplicitlySatisfied(
+      output,
+      REQUIRED_TESTS_POSITIVE_PATTERN,
+      REQUIRED_TESTS_NEGATIVE_PATTERN
+    ),
+    checksPassing: isExplicitlySatisfied(
+      output,
+      CHECKS_PASSING_POSITIVE_PATTERN,
+      CHECKS_PASSING_NEGATIVE_PATTERN
+    ),
+  };
+}
+
+export function checkImplementPostconditions(output: string): boolean {
+  const postconditions = evaluateImplementPostconditions(output);
+  return (
+    postconditions.planComplete &&
+    postconditions.requiredTests &&
+    postconditions.checksPassing
+  );
+}
+
+function getMissingImplementPostconditions(
+  postconditions: ImplementPostconditions
+): string[] {
+  const missing: string[] = [];
+
+  if (!postconditions.planComplete) {
+    missing.push("plan completion");
+  }
+
+  if (!postconditions.requiredTests) {
+    missing.push("required tests");
+  }
+
+  if (!postconditions.checksPassing) {
+    missing.push("passing checks");
+  }
+
+  return missing;
 }
