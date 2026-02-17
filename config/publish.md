@@ -21,6 +21,24 @@ Verify implementation completeness before creating a pull request.
 3. Confirm all tests were written and are passing
 4. Check that no items are left incomplete
 
+## Command Restrictions
+
+Permitted git read commands:
+- `git status`
+- `git log`
+- `git diff`
+- `git show`
+- `git branch`
+
+Forbidden git write/edit commands:
+- `git add`
+- `git commit`
+- `git push`
+- `git checkout`
+- `git merge`
+- `git rebase`
+- `git reset`
+
 ## Verification Criteria
 
 Implementation is COMPLETE if:

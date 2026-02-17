@@ -23,6 +23,24 @@ Use the code-review skill defined in `.ralph/_agents/skills/code-review/skill.md
 4. Verify the implementation matches the plan
 5. Write review findings to `_thoughts/code-review/NNN_topic_name.md`
 
+## Command Restrictions
+
+Permitted git read commands:
+- `git status`
+- `git log`
+- `git diff`
+- `git show`
+- `git branch`
+
+Forbidden git write/edit commands:
+- `git add`
+- `git commit`
+- `git push`
+- `git checkout`
+- `git merge`
+- `git rebase`
+- `git reset`
+
 ## Review Criteria
 
 Code MEETS quality bar if:

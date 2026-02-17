@@ -394,6 +394,21 @@ describe("loadStepConfig", () => {
     expect(reviewConfig.prompt).toContain("_thoughts/code-review/NNN_topic_name.md");
   });
 
+  it("includes explicit git read-only restrictions in review and publish prompts", async () => {
+    const reviewConfig = await loadStepConfig("config/review.md", testIssue);
+    const publishConfig = await loadStepConfig("config/publish.md", testIssue);
+
+    for (const config of [reviewConfig, publishConfig]) {
+      expect(config.prompt).toContain("## Command Restrictions");
+      expect(config.prompt).toContain(
+        "Permitted git read commands:\n- `git status`\n- `git log`\n- `git diff`\n- `git show`\n- `git branch`"
+      );
+      expect(config.prompt).toContain(
+        "Forbidden git write/edit commands:\n- `git add`\n- `git commit`\n- `git push`\n- `git checkout`\n- `git merge`\n- `git rebase`\n- `git reset`"
+      );
+    }
+  });
+
   it("substitutes variables in prompt body", async () => {
     // Use actual embedded config that contains variables
     const config = await loadStepConfig("config/research.md", testIssue);
