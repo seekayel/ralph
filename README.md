@@ -12,8 +12,10 @@ Before using Ralph, ensure you have the following installed:
   - Install: https://cli.github.com/
 - **claude** - Claude Code CLI for AI-assisted coding
   - Install: https://docs.anthropic.com/claude-code
-- **codex** - Codex CLI for validation and review
+- **codex** - Codex CLI for planning, validation, review, and publish verification
   - Install: https://developers.openai.com/codex/cli/
+
+Ralph must be run from inside a git repository.
 
 ## Installation
 
@@ -49,9 +51,9 @@ bun test
 bun run lint
 ```
 
-## Git Worktree Structure
+## Git Worktree Structure (Optional `spawn` Workflow)
 
-Ralph expects to be invoked from a git repository using the bare worktree pattern:
+If you use `ralph spawn`, Ralph expects a repository root with a `main/` worktree and creates sibling issue worktrees:
 
 ```
 ralph-git/
@@ -61,7 +63,7 @@ ralph-git/
 └── hln-1234/    # Feature branch worktree (created by Ralph)
 ```
 
-### Setting Up a Bare Worktree Repository
+### Example Setup for `spawn`
 
 ```bash
 # Clone as bare repository
@@ -91,7 +93,9 @@ Ralph accepts a JSON payload either via stdin or from a file with the `--input` 
 
 ### Run Full Workflow
 
-Executes all steps: spawn -> research -> plan -> validate -> implement -> review -> publish
+Executes core workflow steps: research -> plan -> validate -> implement -> review -> publish
+
+`run` does not execute `spawn`.
 
 ```bash
 # From stdin
@@ -106,7 +110,7 @@ ralph run --input issue.json
 Each step can be run independently:
 
 ```bash
-# Create worktree and branch
+# Optional: create worktree and branch
 ralph spawn --input issue.json
 
 # Research the codebase
@@ -157,8 +161,29 @@ ralph <command> --help
 
 ## Workflow Steps
 
-### 1. Spawn
-Creates a new git worktree and branch based on the issue ID. Runs install, build, and test commands from README.md.
+### Core `run` Workflow
+
+### 1. Research
+Uses Claude Code to explore the codebase and document findings in `_thoughts/research/NNN_topic_name.md`.
+
+### 2. Plan
+Uses Codex to create an implementation plan in `_thoughts/plan/NNN_topic_name.md`.
+
+### 3. Validate
+Uses Codex to validate the plan meets quality standards. May loop back to Plan if changes are needed.
+
+### 4. Implement
+Uses Claude Code to implement the plan. Runs lint/build/test at intervals.
+
+### 5. Review
+Uses Codex to review code changes and write feedback in `_thoughts/code-review/NNN_topic_name.md`. May loop back to Implement if changes are needed.
+
+### 6. Publish
+Uses Codex to verify implementation completeness, then creates a pull request using `gh`.
+
+### Optional `spawn` Command
+
+Creates a new git worktree and branch based on the issue ID, then runs install/build/test commands discovered in `README.md`.
 
 Shell commands (install, build, test) have a default timeout of 5 minutes (300,000 ms). Configure via environment variable:
 
@@ -166,24 +191,6 @@ Shell commands (install, build, test) have a default timeout of 5 minutes (300,0
 # Set custom timeout (in milliseconds)
 export RALPH_COMMAND_TIMEOUT_MS=600000  # 10 minutes
 ```
-
-### 2. Research
-Uses Claude Code to explore the codebase and document findings in `_thoughts/research/`.
-
-### 3. Plan
-Uses Claude Code to create an implementation plan in `_thoughts/plan/`.
-
-### 4. Validate
-Uses Codex to validate the plan meets quality standards. May loop back to Plan if changes needed.
-
-### 5. Implement
-Uses Claude Code to implement the plan. Runs lint/build/test at intervals.
-
-### 6. Review
-Uses Codex to review code changes. May loop back to Implement if changes needed.
-
-### 7. Publish
-Verifies implementation completeness and creates a pull request using `gh`.
 
 ## Configuration
 
@@ -214,6 +221,8 @@ _thoughts/
 ├── code-review/    # Code review feedback
 └── test/           # Test results
 ```
+
+Workflow artifact files should follow `NNN_topic_name.md` naming (for example, `001_add_feature.md`). The full naming and sequencing rules are defined by the RPI skill at `.ralph/_agents/skills/research-plan-implement/skill.md`.
 
 ## License
 

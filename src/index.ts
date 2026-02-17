@@ -30,7 +30,9 @@ program
   .option("-d, --debug-dir <path>", "Directory to write debug artifacts (prompt, stdout, stderr, repro script)")
   .option("-n, --dry-run", "Print the command that would be executed without running it")
   .addHelpText("after", `
-Ralph automates the software development workflow using AI agents:
+Ralph automates the software development workflow using AI agents.
+
+Default agent mapping:
   - Claude Code for research and implementation
   - Codex for planning, validation, code review, and publish verification
 
@@ -38,9 +40,9 @@ Prerequisites:
   - Bun v1.3.6+     Runtime and build tool
   - gh              GitHub CLI for creating pull requests
   - claude          Claude Code CLI for AI-assisted coding
-  - codex           Codex CLI for validation and review
+  - codex           Codex CLI for planning, validation, review, and publish verification
 
-Directory Structure:
+Repository Requirement:
   Ralph must be run from inside a git repository.
 
 Commands:
@@ -142,6 +144,10 @@ Workflow Steps:
   5. review     - Code review using Codex (retries up to 4 times)
   6. publish    - Verify completion and create pull request
 
+Artifact Naming:
+  Workflow artifacts in _thoughts/ should use NNN_topic_name.md
+  (example: 001_add_feature.md, as defined by the RPI skill)
+
 JSON Payload Schema:
   {
     "id": "HLN-123",        // Issue identifier (alphanumeric and hyphens)
@@ -241,6 +247,7 @@ Behavior:
 Output:
   Creates file: _thoughts/research/NNN_topic_name.md
   Example: _thoughts/research/001_add_feature.md
+  Naming is defined by the research-plan-implement skill.
 
 Configuration:
   Uses config/research.md for agent configuration
@@ -302,6 +309,7 @@ Behavior:
 Output:
   Creates file: _thoughts/plan/NNN_topic_name.md
   Example: _thoughts/plan/001_add_feature.md
+  Naming is defined by the research-plan-implement skill.
 
 Configuration:
   Uses config/plan.md for agent configuration
@@ -495,6 +503,7 @@ Behavior:
 Output:
   Creates file: _thoughts/code-review/NNN_topic_name.md
   Example: _thoughts/code-review/001_add_feature.md
+  Naming is defined by the research-plan-implement skill.
 
 Exit Codes:
   0 - Code meets quality bar
