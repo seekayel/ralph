@@ -9,13 +9,10 @@ import { run } from "./commands/run.js";
 import { spawn } from "./commands/spawn.js";
 import { validate } from "./commands/validate.js";
 import type { WorkflowContext } from "./types.js";
-import {
-  issueToBranchName,
-  issueToWorktreeName,
-  readPayloadFromStdinOrFile,
-} from "./utils/config.js";
+import { readPayloadFromStdinOrFile } from "./utils/config.js";
 import { getGitRepositoryRoot, isGitRepository } from "./utils/git.js";
 import { debug, setVerbose, setDebugDir, setDryRun } from "./utils/logger.js";
+import { createWorkflowContext } from "./utils/workflow-context.js";
 
 const program = new Command();
 
@@ -567,14 +564,7 @@ function createContextFromIssue(
   issue: { id: string; title: string; description: string },
   rootDir: string
 ): WorkflowContext {
-  const worktreeName = issueToWorktreeName(issue.id);
-  return {
-    issue,
-    worktreeDir: `${rootDir}/${worktreeName}`,
-    branchName: issueToBranchName(issue.id),
-    planValidationAttempts: 0,
-    codeReviewAttempts: 0,
-  };
+  return createWorkflowContext(issue, rootDir);
 }
 
 program.parse();
