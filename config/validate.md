@@ -10,13 +10,13 @@ Review and validate the implementation plan for quality and completeness.
 
 ## Issue Details
 
-- **ID:** ${issue.id}
-- **Title:** ${issue.title}
-- **Description:** ${issue.description}
+- **ID:** ${id}
+- **Title:** ${title}
+- **Description:** ${description}
 
 ## Instructions
 
-1. Read the plan from `_thoughts/plan/${issue.id}_*.md`
+1. Read the plan from `_thoughts/plan/${id}_*.md`
 2. Verify the plan will implement the feature described in the issue
 3. Check that the testing strategy will adequately verify the implementation
 4. Assess if success criteria are clear and testable

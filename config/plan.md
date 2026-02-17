@@ -10,16 +10,16 @@ Use the research-plan-implement workflow defined in `.ralph/_agents/skills/resea
 
 ## Issue Details
 
-- **ID:** ${issue.id}
-- **Title:** ${issue.title}
-- **Description:** ${issue.description}
+- **ID:** ${id}
+- **Title:** ${title}
+- **Description:** ${description}
 
 ## Instructions
 
-1. Read the research findings from `_thoughts/research/${issue.id}_*.md`
+1. Read the research findings from `_thoughts/research/${id}_*.md`
 2. Create a detailed implementation plan
 3. Define testing strategy
-4. Document the plan in `_thoughts/plan/${issue.id}_<topic_name>.md`
+4. Document the plan in `_thoughts/plan/${id}_<topic_name>.md`
 
 ## Constraints
 
@@ -29,7 +29,7 @@ Use the research-plan-implement workflow defined in `.ralph/_agents/skills/resea
 
 ## Success Criteria
 
-Create a plan file at `_thoughts/plan/${issue.id}_<topic_name>.md` that includes:
+Create a plan file at `_thoughts/plan/${id}_<topic_name>.md` that includes:
 - Overview of the implementation
 - Phased approach with files to modify
 - Success criteria for each phase

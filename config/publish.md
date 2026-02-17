@@ -10,13 +10,13 @@ Verify implementation completeness before creating a pull request.
 
 ## Issue Details
 
-- **ID:** ${issue.id}
-- **Title:** ${issue.title}
-- **Description:** ${issue.description}
+- **ID:** ${id}
+- **Title:** ${title}
+- **Description:** ${description}
 
 ## Instructions
 
-1. Read the implementation plan from `_thoughts/plan/${issue.id}_*.md`
+1. Read the implementation plan from `_thoughts/plan/${id}_*.md`
 2. Verify all plan items have been implemented
 3. Confirm all tests were written and are passing
 4. Check that no items are left incomplete

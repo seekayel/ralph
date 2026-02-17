@@ -11,16 +11,16 @@ Use the research-plan-implement workflow defined in `.ralph/_agents/skills/resea
 
 ## Issue Details
 
-- **ID:** ${issue.id}
-- **Title:** ${issue.title}
-- **Description:** ${issue.description}
+- **ID:** ${id}
+- **Title:** ${title}
+- **Description:** ${description}
 
 ## Instructions
 
 1. Thoroughly explore the codebase to understand the architecture and patterns
 2. Identify files that will need to be modified for this issue
 3. Find existing patterns for similar functionality
-4. Document your findings in `_thoughts/research/${issue.id}_<topic_name>.md`
+4. Document your findings in `_thoughts/research/${id}_<topic_name>.md`
 
 ## Constraints
 
@@ -30,7 +30,7 @@ Use the research-plan-implement workflow defined in `.ralph/_agents/skills/resea
 
 ## Success Criteria
 
-Create a research file at `_thoughts/research/${issue.id}_<topic_name>.md` that documents:
+Create a research file at `_thoughts/research/${id}_<topic_name>.md` that documents:
 - Architecture analysis
 - Relevant code locations
 - Existing patterns to follow

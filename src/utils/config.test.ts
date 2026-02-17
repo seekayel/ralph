@@ -8,6 +8,7 @@ import {
   issueToTopicName,
   issueToWorktreeName,
   loadStepConfig,
+  parseStepConfigContent,
   parseIssuePayload,
   readPayloadFromStdinOrFile,
   substituteVariables,
@@ -249,6 +250,21 @@ describe("substituteVariables", () => {
     description: "Feature description here",
   };
 
+  it("substitutes id shorthand", () => {
+    const result = substituteVariables("Issue: ${id}", issue);
+    expect(result).toBe("Issue: TEST-456");
+  });
+
+  it("substitutes title shorthand", () => {
+    const result = substituteVariables("Title: ${title}", issue);
+    expect(result).toBe("Title: Add feature");
+  });
+
+  it("substitutes description shorthand", () => {
+    const result = substituteVariables("Desc: ${description}", issue);
+    expect(result).toBe("Desc: Feature description here");
+  });
+
   it("substitutes issue.id", () => {
     const result = substituteVariables("Issue: ${issue.id}", issue);
     expect(result).toBe("Issue: TEST-456");
@@ -278,6 +294,30 @@ describe("substituteVariables", () => {
   it("handles multiple occurrences of same variable", () => {
     const result = substituteVariables("${issue.id} and ${issue.id}", issue);
     expect(result).toBe("TEST-456 and TEST-456");
+  });
+});
+
+describe("parseStepConfigContent", () => {
+  it("substitutes shorthand variables in front-matter and prompt body", () => {
+    const issue = {
+      id: "SUB-123",
+      title: "Test substitutions",
+      description: "Front matter + body",
+    };
+
+    const rawConfig = `---
+command: "\${id}-agent"
+args:
+  - "--issue=\${id}"
+  - "--title=\${title}"
+---
+Issue description: \${description}`;
+
+    const config = parseStepConfigContent(rawConfig, issue, "config/test.md");
+
+    expect(config.command).toBe("SUB-123-agent");
+    expect(config.args).toEqual(["--issue=SUB-123", "--title=Test substitutions"]);
+    expect(config.prompt).toBe("Issue description: Front matter + body");
   });
 });
 

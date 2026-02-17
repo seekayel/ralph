@@ -71,36 +71,14 @@ export async function loadStepConfig(
     throw new Error(`Config not found in embedded assets: ${configPath}`);
   }
 
-  debug(`Config loaded from embedded assets, size: ${content.length} bytes`);
-
-  const { frontMatter, body } = parseFrontMatter(content);
-  debug(`Parsed front-matter, body length: ${body.length} characters`);
-
-  const config = parseYaml(frontMatter) as ConfigFrontMatter;
-  debugObject("Parsed config front-matter", config);
-
-  if (!config.command) {
-    throw new Error(`Config file missing required 'command' field: ${configPath}`);
-  }
-
-  const substitutedArgs = (config.args || []).map((arg) =>
-    substituteVariables(arg, issue)
-  );
-  const substitutedPrompt = substituteVariables(body, issue);
-
-  debug(`Variable substitution complete for issue: ${issue.id}`);
-  debugObject("Final command args", substitutedArgs);
+  const stepConfig = parseStepConfigContent(content, issue, configPath);
 
   // Validate skill paths if worktreeDir is provided
   if (worktreeDir) {
-    await validateSkillPaths(substitutedPrompt, worktreeDir);
+    await validateSkillPaths(stepConfig.prompt, worktreeDir);
   }
 
-  return {
-    command: config.command,
-    args: substitutedArgs,
-    prompt: substitutedPrompt,
-  };
+  return stepConfig;
 }
 
 function parseFrontMatter(content: string): {
@@ -120,8 +98,45 @@ function parseFrontMatter(content: string): {
   };
 }
 
+export function parseStepConfigContent(
+  content: string,
+  issue: Issue,
+  configPath = "<inline>"
+): StepConfig {
+  debug(`Parsing config content for ${configPath}, size: ${content.length} bytes`);
+
+  const { frontMatter, body } = parseFrontMatter(content);
+  debug(`Parsed front-matter, body length: ${body.length} characters`);
+
+  const substitutedFrontMatter = substituteVariables(frontMatter, issue);
+  const parsed = parseYaml(substitutedFrontMatter) as ConfigFrontMatter;
+  debugObject("Parsed config front-matter", parsed);
+
+  if (!parsed.command) {
+    throw new Error(`Config file missing required 'command' field: ${configPath}`);
+  }
+
+  const substitutedCommand = substituteVariables(parsed.command, issue);
+  const substitutedArgs = (parsed.args || []).map((arg) =>
+    substituteVariables(String(arg), issue)
+  );
+  const substitutedPrompt = substituteVariables(body, issue);
+
+  debug(`Variable substitution complete for issue: ${issue.id}`);
+  debugObject("Final command args", substitutedArgs);
+
+  return {
+    command: substitutedCommand,
+    args: substitutedArgs,
+    prompt: substitutedPrompt,
+  };
+}
+
 export function substituteVariables(template: string, issue: Issue): string {
   return template
+    .replace(/\$\{id\}/g, issue.id)
+    .replace(/\$\{title\}/g, issue.title)
+    .replace(/\$\{description\}/g, issue.description)
     .replace(/\$\{issue\.id\}/g, issue.id)
     .replace(/\$\{issue\.title\}/g, issue.title)
     .replace(/\$\{issue\.description\}/g, issue.description);
