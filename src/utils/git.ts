@@ -37,6 +37,29 @@ export async function isGitBareWorktreeRoot(dir: string): Promise<boolean> {
   }
 }
 
+export async function isGitRepository(dir: string): Promise<boolean> {
+  debug(`Checking if directory is in a git repository: ${dir}`);
+  try {
+    await $`git -C ${dir} rev-parse --git-dir`.quiet();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function getGitRepositoryRoot(dir: string): Promise<string | null> {
+  debug(`Resolving git repository root from: ${dir}`);
+  try {
+    const result = await $`git -C ${dir} rev-parse --show-toplevel`.quiet().text();
+    const root = result.trim();
+    debug(`Resolved git repository root: ${root}`);
+    return root;
+  } catch {
+    debug("Failed to resolve git repository root");
+    return null;
+  }
+}
+
 export async function createWorktree(
   rootDir: string,
   branchName: string,

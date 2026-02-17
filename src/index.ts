@@ -14,7 +14,7 @@ import {
   issueToWorktreeName,
   readPayloadFromStdinOrFile,
 } from "./utils/config.js";
-import { isGitBareWorktreeRoot } from "./utils/git.js";
+import { getGitRepositoryRoot, isGitRepository } from "./utils/git.js";
 import { debug, setVerbose, setDebugDir, setDryRun } from "./utils/logger.js";
 
 const program = new Command();
@@ -40,12 +40,7 @@ Prerequisites:
   - codex           Codex CLI for validation and review
 
 Directory Structure:
-  Ralph must be run from a git bare worktree root directory:
-    ralph-git/
-    ├── .bare/       Git database (bare repository)
-    ├── .git         File pointing to .bare/
-    ├── main/        Main branch worktree
-    └── feature-123/ Feature branch worktrees
+  Ralph must be run from inside a git repository.
 
 Commands:
   run        Full workflow: spawn -> research -> plan -> validate -> implement -> review -> publish
@@ -106,22 +101,20 @@ For command-specific help, run: ralph <command> --help
 
 async function validateEnvironment(): Promise<string> {
   const cwd = process.cwd();
-  const isValidRoot = await isGitBareWorktreeRoot(cwd);
+  const isRepo = await isGitRepository(cwd);
 
-  if (!isValidRoot) {
-    console.error(
-      "Error: Ralph must be run from a git bare worktree root directory."
-    );
-    console.error("Expected structure:");
-    console.error("  ralph-git/");
-    console.error("  ├── .bare/       # Git database");
-    console.error("  ├── .git         # File pointing to .bare/");
-    console.error("  ├── main/        # Main branch worktree");
-    console.error("  └── feature-123/ # Feature branch worktrees");
+  if (!isRepo) {
+    console.error("Error: Ralph must be run from inside a git repository.");
     process.exit(1);
   }
 
-  return cwd;
+  const repoRoot = await getGitRepositoryRoot(cwd);
+  if (!repoRoot) {
+    console.error("Error: Failed to determine git repository root.");
+    process.exit(1);
+  }
+
+  return repoRoot;
 }
 
 program
